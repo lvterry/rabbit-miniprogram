@@ -1,0 +1,79 @@
+<view wx:if="{{item}}" class="page-shell detail-page">
+  <view class="detail-head">
+    <view class="detail-title-row"><text class="detail-title">{{item.title}}</text><text class="status-badge status-{{item.status}}">{{item.statusLabel}}</text></view>
+    <view wx:if="{{item.creditHintVisible}}" class="status-row"><text class="credit-hint">已消耗 1 课时</text></view>
+  </view>
+
+  <view class="summary-card card">
+    <view class="summary-icon"><image class="calendar-icon" src="/assets/calendar-days.svg" mode="aspectFit" /></view>
+    <view class="summary-text"><text class="summary-date">{{item.dateFullLabel}}</text><text class="summary-time">{{item.timeLabel}}</text></view>
+  </view>
+
+  <view class="info-card card">
+    <view class="info-row student-row"><text class="field-label">学员</text><view class="student-value"><text class="field-value student-link" hover-class="student-link-hover" bindtap="openStudent">{{item.studentNames}}</text></view></view>
+    <view class="divider"></view>
+    <view class="info-row"><text class="field-label">课时</text><text class="field-value">{{item.creditSummary}}</text></view>
+    <view class="divider"></view>
+    <view class="info-row info-note"><text class="field-label">备注</text><view class="note-content"><text wx:if="{{item.note}}" class="field-value">{{item.note}}</text><text wx:else class="field-value empty-note">暂无备注</text><text class="edit-link" data-sheet="editNote" bindtap="openSheet">编辑</text></view></view>
+  </view>
+
+  <view wx:if="{{item.history.length > 0}}" class="history-section">
+    <view class="section-heading"><text class="section-title">操作记录</text></view>
+    <view class="history-card card">
+      <view wx:for="{{item.history}}" wx:key="id" class="history-entry">
+        <view class="history-marker"></view>
+        <view class="history-content"><text class="history-title">{{item.title}}</text><text class="history-time">{{item.time}}</text><text wx:if="{{item.note}}" class="history-note">备注：{{item.note}}</text></view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{item}}" class="action-dock">
+  <block wx:if="{{item.status === 'scheduled'}}">
+    <button class="primary-button" data-sheet="reschedule" bindtap="openSheet">改期</button>
+    <view class="action-row"><button class="secondary-button" data-sheet="cancel" bindtap="openSheet">取消课程</button><button class="secondary-button" data-sheet="complete" bindtap="openSheet">标记完成</button></view>
+  </block>
+  <button wx:elif="{{item.status === 'cancelled'}}" class="primary-button" data-sheet="restore" bindtap="openSheet">恢复课程</button>
+  <button wx:else class="secondary-button" data-sheet="uncomplete" bindtap="openSheet">撤销完成</button>
+</view>
+
+<bottom-sheet visible="{{sheet !== ''}}" title="{{sheetTitle}}" bind:close="closeSheet">
+
+    <view wx:if="{{sheet === 'reschedule'}}" class="sheet-fields">
+      <text class="input-label">调整到</text>
+      <picker mode="date" value="{{draftDate}}" start="{{minDate}}" bindchange="onDateChange"><view class="picker-field"><text class="picker-label">日期</text><view class="picker-value">{{draftDate}}<image class="picker-chevron" src="/assets/chevron-down.svg" mode="aspectFit" /></view></view></picker>
+      <view class="time-pickers"><picker mode="time" value="{{draftStart}}" bindchange="onStartChange"><view class="picker-field"><text class="picker-label">开始</text><view class="picker-value">{{draftStart}}<image class="picker-chevron" src="/assets/chevron-down.svg" mode="aspectFit" /></view></view></picker><picker mode="time" value="{{draftEnd}}" bindchange="onEndChange"><view class="picker-field"><text class="picker-label">{{draftEndDate !== draftDate ? '结束（次日）' : '结束'}}</text><view class="picker-value">{{draftEnd}}<image class="picker-chevron" src="/assets/chevron-down.svg" mode="aspectFit" /></view></view></picker></view>
+      <text class="input-label note-label">变更备注（选填）</text>
+      <textarea class="sheet-textarea" placeholder="例如：学生临时有事，调整到周五" value="{{draftNote}}" maxlength="200" bindinput="onNoteInput" />
+      <button class="primary-button sheet-primary" bindtap="confirmReschedule">确认改期</button>
+    </view>
+
+    <view wx:elif="{{sheet === 'cancel'}}" class="sheet-fields">
+      <text class="sheet-description">请选择本次取消是否消耗学员课时。</text>
+      <text class="input-label note-label">取消原因或备注（选填）</text>
+      <textarea class="sheet-textarea" placeholder="例如：学生临时有事" value="{{draftNote}}" maxlength="200" bindinput="onNoteInput" />
+      <button class="primary-button sheet-primary" data-consume="yes" bindtap="confirmCancel">取消并消耗 1 课时</button>
+      <button class="secondary-button sheet-secondary" data-consume="no" bindtap="confirmCancel">取消但不消耗课时</button>
+    </view>
+
+    <view wx:elif="{{sheet === 'complete'}}" class="sheet-fields">
+      <text class="sheet-description">完成后将记录本次授课，并消耗 1 课时。</text>
+      <text class="input-label note-label">课后备注（选填）</text>
+      <textarea class="sheet-textarea" placeholder="例如：完成第一章，学生表现很好" value="{{draftNote}}" maxlength="200" bindinput="onNoteInput" />
+      <button class="primary-button sheet-primary" bindtap="confirmComplete">确认完成并消耗课时</button>
+    </view>
+
+    <view wx:elif="{{sheet === 'restore' || sheet === 'uncomplete'}}" class="sheet-fields">
+      <text class="sheet-description">{{reversalDescription}}</text>
+      <text class="input-label note-label">操作备注（选填）</text>
+      <textarea class="sheet-textarea" placeholder="记录本次调整的原因" value="{{draftNote}}" maxlength="200" bindinput="onNoteInput" />
+      <button wx:if="{{sheet === 'restore'}}" class="primary-button sheet-primary" bindtap="confirmRestore">确认恢复课程</button>
+      <button wx:else class="primary-button sheet-primary" bindtap="confirmUncomplete">确认撤销完成</button>
+    </view>
+
+    <view wx:else class="sheet-fields">
+      <text class="input-label">课程备注</text>
+      <textarea class="sheet-textarea" placeholder="填写上课地点、准备事项等" value="{{draftNote}}" maxlength="200" bindinput="onNoteInput" />
+      <button class="primary-button sheet-primary" bindtap="confirmEditNote">保存备注</button>
+    </view>
+</bottom-sheet>

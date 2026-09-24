@@ -1,0 +1,31 @@
+<view class="page-shell students-page">
+  <view wx:if="{{activeStudents.length}}" class="student-section">
+    <view class="section-heading"><text class="section-title">活跃学员</text></view>
+    <view wx:for="{{activeStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
+      <view class="avatar" style="background:{{item.color}}">{{item.initial}}</view>
+      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-count">{{item.learningLabel}}</text></view>
+      <view class="student-trailing"><text class="credit-count">{{item.remainingCredits}}/{{item.totalCredits}}</text><text class="arrow">›</text></view>
+    </view>
+  </view>
+
+  <view wx:if="{{inactiveStudents.length}}" class="student-section inactive-section">
+    <view class="section-heading"><text class="section-title">未活跃</text></view>
+    <view wx:for="{{inactiveStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
+      <view class="avatar" style="background:{{item.color}}">{{item.initial}}</view>
+      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-count">{{item.learningLabel}}</text></view>
+      <view class="student-trailing"><text class="credit-count">{{item.remainingCredits}}/{{item.totalCredits}}</text><text class="arrow">›</text></view>
+    </view>
+  </view>
+</view>
+
+<button class="add-student-button" bindtap="openAddSheet"><image src="/assets/plus.svg" mode="aspectFit" /></button>
+<tab-bar active="students" />
+
+<bottom-sheet visible="{{addSheet}}" title="添加学员" bind:close="closeAddSheet">
+    <view class="sheet-fields">
+      <text class="input-label">姓名</text><input class="sheet-input" placeholder="输入学员姓名" value="{{newName}}" bindinput="onNameInput" />
+      <text class="input-label field-gap">课程</text><input class="sheet-input" placeholder="输入课程名称" value="{{newClassName}}" bindinput="onClassInput" />
+      <text class="input-label field-gap">备注（选填）</text><textarea class="sheet-textarea" placeholder="添加学员备注" value="{{newNotes}}" maxlength="200" bindinput="onNotesInput" />
+      <button class="primary-button sheet-primary" bindtap="createStudent">创建学员</button>
+    </view>
+</bottom-sheet>

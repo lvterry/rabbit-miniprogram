@@ -1,0 +1,8 @@
+<view class="page-shell edit-student-page">
+  <view class="edit-card card">
+    <view class="edit-field"><text class="edit-label">姓名</text><input class="edit-input" value="{{name}}" bindinput="onNameInput" placeholder="学员姓名" /></view>
+    <view class="edit-field"><text class="edit-label">课程</text><picker class="course-picker" mode="selector" range="{{offeringNames}}" value="{{classIndex}}" bindchange="onClassChange"><view class="course-picker-value"><text>{{className || '请选择课程'}}</text><image src="/assets/chevron-down.svg" mode="aspectFit" /></view></picker></view>
+    <view class="edit-field notes-field"><text class="edit-label">备注</text><textarea class="edit-textarea" value="{{notes}}" bindinput="onNotesInput" placeholder="添加学员备注" maxlength="300" /></view>
+  </view>
+</view>
+<view class="save-dock"><button class="primary-button" bindtap="save">保存</button></view>

@@ -1,0 +1,11 @@
+<view wx:if="{{rendered}}" class="sheet-root {{phase === 'open' ? 'sheet-open' : ''}}">
+  <view class="sheet-mask" bindtap="requestClose"></view>
+  <view class="sheet-panel" style="max-height:{{maxHeight}}" catchtap="stopTap">
+    <view class="sheet-grip"></view>
+    <view class="sheet-header">
+      <text class="sheet-title">{{title}}</text>
+      <text wx:if="{{showClose}}" class="sheet-close" bindtap="requestClose">×</text>
+    </view>
+    <slot />
+  </view>
+</view>

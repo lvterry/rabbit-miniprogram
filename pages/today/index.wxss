@@ -1,0 +1,39 @@
+.hero { position:relative; display:flex; align-items:center; padding: 28rpx 28rpx 28rpx 34rpx; border-radius: 38rpx; overflow:hidden; background: var(--color-brand); color:var(--color-surface); box-shadow:var(--shadow-brand); }
+.hero::after { content:''; position:absolute; width:270rpx; height:270rpx; border:2rpx solid var(--color-surface-highlight); border-radius:50%; right:-36rpx; top:-90rpx; }
+.hero-copy { position:relative; z-index:2; display:flex; flex-direction:column; flex:1; }
+.hero-kicker { font-size:var(--font-size-small); opacity:.87; margin-bottom:18rpx; }
+.hero-title { font-size:var(--font-size-h1); font-weight:750; letter-spacing:1rpx; line-height:1.4; }
+.hero-logo { position:relative; z-index:1; width:195rpx; height:195rpx; margin-right:-24rpx; margin-left:-20rpx; align-self:flex-end; }
+.section-heading { display:flex; justify-content:space-between; align-items:baseline; margin:46rpx 4rpx 22rpx; }
+.section-count { color:var(--color-text-weak); font-size:var(--font-size-small); }
+.class-card { display:flex; align-items:center; padding:28rpx 25rpx; margin-bottom:18rpx; min-height:128rpx; box-sizing:border-box; }
+.time-rail { width:123rpx; flex-shrink:0; border-right:3rpx solid var(--color-brand-soft); display:flex; flex-direction:column; gap:7rpx; }
+.time-main { font-size:var(--font-size-normal); font-weight:750; color:var(--color-brand); }
+.time-end { font-size:var(--font-size-small); color:var(--color-text-weak); }
+.class-main { display:flex; flex:1; flex-direction:column; gap:9rpx; padding-left:24rpx; min-width:0; }
+.class-top { display:flex; align-items:center; gap:12rpx; }
+.class-name { font-size:var(--font-size-normal); font-weight:700; color:var(--color-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.student-name { color:var(--color-text); font-size:var(--font-size-small); }
+.note-preview { color:var(--color-text-weak); font-size:var(--font-size-small); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chevron { color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; padding-left:10rpx; }
+.status { padding:5rpx 12rpx; border-radius:20rpx; font-size:var(--font-size-small); white-space:nowrap; }
+.status-cancelled { color:var(--color-status-cancelled); background:var(--color-status-cancelled-background); }
+.status-completed { color:var(--color-brand); background:var(--color-brand-soft); }
+.class-card.cancelled .time-main,
+.class-card.cancelled .time-end,
+.class-card.cancelled .class-name,
+.class-card.cancelled .student-name,
+.class-card.cancelled .note-preview,
+.class-card.cancelled .chevron,
+.upcoming-card.cancelled .upcoming-date,
+.upcoming-card.cancelled .upcoming-weekday,
+.upcoming-card.cancelled .class-name,
+.upcoming-card.cancelled .upcoming-course,
+.upcoming-card.cancelled .chevron { color:var(--color-text-weak); }
+.upcoming-heading { margin-top:48rpx; }
+.upcoming-card { display:flex; align-items:center; padding:26rpx; margin-bottom:16rpx; }
+.upcoming-date { display:flex; flex-direction:column; gap:8rpx; width:116rpx; flex-shrink:0; color:var(--color-brand); font-size:var(--font-size-normal); font-weight:750; }
+.upcoming-weekday { font-size:var(--font-size-small); color:var(--color-text-weak); font-weight:500; }
+.upcoming-info { display:flex; flex:1; flex-direction:column; gap:9rpx; padding-left:18rpx; min-width:0; }
+.upcoming-course { font-size:var(--font-size-small); color:var(--color-text-weak); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.empty { padding:55rpx; text-align:center; color:var(--color-text-weak); }

@@ -1,0 +1,29 @@
+<view class="page-shell">
+  <view class="hero">
+    <view class="hero-copy">
+      <text class="hero-kicker">{{dateText}}</text>
+      <text class="hero-title">今天有 {{count}} 节课，祝一切顺利</text>
+    </view>
+    <image class="hero-logo" src="/rabbit-logo.png" mode="aspectFit" />
+  </view>
+
+  <view class="section-heading"><text class="section-title">今日课程</text></view>
+  <view wx:if="{{today.length === 0}}" class="empty card">今天还没有课程安排</view>
+  <view wx:for="{{today}}" wx:key="id" class="class-card card {{item.status === 'cancelled' ? 'cancelled' : ''}}" data-id="{{item.id}}" bindtap="openDetail">
+    <view class="time-rail"><text class="time-main">{{item.start}}</text><text class="time-end">{{item.end}}</text></view>
+    <view class="class-main">
+      <view class="class-top"><text class="class-name">{{item.title}}</text><text wx:if="{{item.status !== 'scheduled'}}" class="status status-{{item.status}}">{{item.statusLabel}}</text></view>
+      <text class="student-name">{{item.studentNames}}</text>
+      <text wx:if="{{item.note}}" class="note-preview">{{item.note}}</text>
+    </view>
+    <text class="chevron">›</text>
+  </view>
+
+  <view class="section-heading upcoming-heading"><text class="section-title">接下来的课程</text></view>
+  <view wx:for="{{upcoming}}" wx:key="id" class="upcoming-card card {{item.status === 'cancelled' ? 'cancelled' : ''}}" data-id="{{item.id}}" bindtap="openDetail">
+    <view class="upcoming-date"><text>{{item.dateLabel}}</text><text class="upcoming-weekday">{{item.start}}</text></view>
+    <view class="upcoming-info"><view class="class-top"><text class="class-name">{{item.studentNames}}</text><text wx:if="{{item.status !== 'scheduled'}}" class="status status-{{item.status}}">{{item.statusLabel}}</text></view><text class="upcoming-course">{{item.title}} · {{item.timeLabel}}</text></view>
+    <text class="chevron">›</text>
+  </view>
+</view>
+<tab-bar active="today" />

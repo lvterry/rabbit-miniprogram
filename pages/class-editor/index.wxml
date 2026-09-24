@@ -1,0 +1,17 @@
+<view class="page-shell editor-page">
+  <view class="editor-card card">
+    <view class="editor-field"><text class="editor-label">课程名称</text><input class="editor-input" value="{{name}}" bindinput="onNameInput" placeholder="填写课程名称" maxlength="40" /></view>
+    <view class="editor-field description-field"><text class="editor-label">课程介绍</text><textarea class="editor-textarea" value="{{description}}" bindinput="onDescriptionInput" placeholder="介绍这门课程" maxlength="500" /></view>
+  </view>
+</view>
+<view class="editor-dock"><button class="primary-button" loading="{{saving}}" bindtap="save">保存</button><button class="secondary-button poster-button" bindtap="openPoster">分享海报</button></view>
+
+<bottom-sheet visible="{{posterOpen}}" title="海报预览" max-height="88vh" bind:close="closePoster">
+    <view class="poster-paper">
+      <view class="poster-brand"><image src="/rabbit-logo.png" mode="aspectFit" /><text>小兔排课</text></view>
+      <text class="poster-course">{{name}}</text>
+      <text class="poster-description">{{description || '欢迎了解这门课程'}}</text>
+      <view class="poster-footer">和老师一起，安排好每一节课</view>
+    </view>
+    <button class="primary-button share-button" open-type="share">转发课程</button>
+</bottom-sheet>

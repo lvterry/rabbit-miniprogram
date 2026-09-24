@@ -1,0 +1,15 @@
+.account-card { display:flex; align-items:center; min-height:142rpx; padding:27rpx; box-sizing:border-box; }
+.account-avatar { width:86rpx; height:86rpx; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:50%; margin-right:23rpx; }
+.guest-avatar { background:var(--color-brand-soft); }
+.guest-avatar image { width:52rpx; height:52rpx; }
+.logged-avatar { background:var(--color-brand-soft); color:var(--color-brand); font-size:var(--font-size-h1); font-weight:750; }
+.account-copy { display:flex; flex:1; flex-direction:column; gap:8rpx; min-width:0; }
+.account-name { font-size:var(--font-size-h2); font-weight:700; color:var(--color-text); }
+.account-description { font-size:var(--font-size-small); color:var(--color-text-weak); }
+.menu-chevron { color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; }
+.menu-card { margin-top:28rpx; padding:0 27rpx; }
+.menu-row { display:flex; align-items:center; justify-content:space-between; min-height:104rpx; font-size:var(--font-size-normal); font-weight:600; color:var(--color-text); }
+.menu-row + .menu-row { border-top:2rpx solid var(--color-border); }
+.logout-wrap { margin-top:30rpx; text-align:center; }
+.logout-button { display:inline-block; width:auto; min-width:0; margin:0; padding:0 24rpx; height:72rpx; line-height:72rpx; background:transparent; border:0; color:var(--color-text-weak); font-size:var(--font-size-small); font-weight:500; }
+.logout-button::after { border:0; }

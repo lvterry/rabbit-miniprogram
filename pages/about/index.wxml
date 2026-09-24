@@ -1,0 +1,10 @@
+<view class="page-shell about-page">
+  <view class="brand-block"><image src="/rabbit-logo.png" mode="aspectFit" /><text class="brand-name">小兔排课</text><text class="brand-version">v0.1.0</text><text class="about-description">小兔排课是专为独立老师、教练、顾问等设计的课程安排、学员管理和财务统计工具。</text></view>
+  <view class="about-menu card"><view class="about-row" bindtap="openFeedback"><text>意见反馈</text><text class="row-chevron">›</text></view></view>
+</view>
+
+<bottom-sheet visible="{{feedbackOpen}}" title="意见反馈" bind:close="closeFeedback">
+    <text class="input-label">告诉我们你的想法</text>
+    <textarea class="feedback-textarea" value="{{feedbackText}}" bindinput="onFeedbackInput" placeholder="使用过程中遇到的问题或建议" maxlength="500" />
+    <button class="primary-button submit-button" bindtap="submitFeedback">提交反馈</button>
+</bottom-sheet>

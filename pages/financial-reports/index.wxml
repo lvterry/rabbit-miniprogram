@@ -1,0 +1,29 @@
+<view class="page-shell reports-page">
+  <view class="total-card card"><text class="total-label">总收入</text><text class="total-value">¥ {{totalText}}</text><text class="total-caption">近六个月 · 模拟数据</text></view>
+
+  <view wx:if="{{showClassBreakdown}}" class="report-section">
+    <view class="section-heading"><text class="section-title">按课程</text></view>
+    <view class="pie-card card">
+      <canvas type="2d" id="classPie" class="pie-chart"></canvas>
+      <view class="pie-legend">
+        <view wx:for="{{classBreakdown}}" wx:key="id" class="legend-row"><view class="legend-dot" style="background:{{item.color}}"></view><view class="legend-copy"><text>{{item.name}}</text><text class="legend-amount">¥ {{item.amountText}} · {{item.percent}}%</text></view></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="report-section">
+    <view class="section-heading"><text class="section-title">按月份</text></view>
+    <view class="bar-card card">
+      <view wx:if="{{months.length === 0}}" class="chart-empty">暂无收入记录</view>
+      <view wx:else class="bar-chart">
+        <view wx:for="{{months}}" wx:key="key" class="bar-column">
+          <view class="bar-plot">
+            <text class="bar-amount" style="bottom:{{item.labelBottom}}rpx">{{item.amountText}}</text>
+            <view class="bar-track"><view class="bar-fill" style="height:{{item.height}}%"></view></view>
+          </view>
+          <text class="bar-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

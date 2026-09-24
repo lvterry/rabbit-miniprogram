@@ -1,0 +1,13 @@
+.sheet-root { position:fixed; z-index:50; top:0; right:0; bottom:0; left:0; }
+.sheet-mask { position:absolute; top:0; right:0; bottom:0; left:0; background:var(--color-overlay); opacity:0; transition:opacity 250ms ease-in-out; }
+.sheet-panel { position:absolute; left:0; right:0; bottom:0; overflow-y:auto; box-sizing:border-box; padding:14rpx 34rpx calc(34rpx + env(safe-area-inset-bottom)); border-radius:42rpx 42rpx 0 0; background:var(--color-surface); box-shadow:var(--shadow-sheet); transform:translateY(100%); transition:transform 250ms ease-in-out; }
+.sheet-open .sheet-mask { opacity:1; }
+.sheet-open .sheet-panel { transform:translateY(0); }
+.sheet-grip { width:72rpx; height:9rpx; margin:0 auto 24rpx; border-radius:20rpx; background:var(--color-border); }
+.sheet-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:25rpx; }
+.sheet-title { color:var(--color-text); font-size:var(--font-size-h2); font-weight:760; }
+.sheet-close { width:56rpx; color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; text-align:center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-mask, .sheet-panel { transition:none; }
+}

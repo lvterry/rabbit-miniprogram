@@ -1,0 +1,12 @@
+.about-page { padding-bottom:90rpx; }
+.brand-block { min-height:420rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.brand-block image { width:174rpx; height:174rpx; }
+.brand-name { margin-top:20rpx; color:var(--color-text); font-size:var(--font-size-h2); font-weight:750; }
+.brand-version { margin-top:9rpx; color:var(--color-text-weak); font-size:var(--font-size-small); }
+.about-description { max-width:620rpx; margin:26rpx 42rpx 0; color:var(--color-text-weak); font-size:var(--font-size-normal); line-height:1.6; text-align:center; }
+.about-menu { padding:0 27rpx; margin-top: 24rpx; }
+.about-row { min-height:106rpx; display:flex; align-items:center; justify-content:space-between; color:var(--color-text); font-size:var(--font-size-normal); font-weight:600; }
+.row-chevron { color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; }
+.input-label { display:block; margin-bottom:14rpx; color:var(--color-text-weak); font-size:var(--font-size-normal); font-weight:400; }
+.feedback-textarea { width:100%; height:210rpx; box-sizing:border-box; padding:20rpx; border:2rpx solid var(--color-border); border-radius:20rpx; background:var(--color-surface-muted); color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; }
+.submit-button { width:100%; margin:27rpx 0 0; }

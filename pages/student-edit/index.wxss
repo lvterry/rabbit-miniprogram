@@ -1,0 +1,13 @@
+.edit-student-page { padding-bottom:180rpx; }
+.edit-card { padding:10rpx 30rpx; }
+.edit-field { display:flex; align-items:center; gap:20rpx; min-height:100rpx; border-bottom:2rpx solid var(--color-border); }
+.edit-field:last-child { border-bottom:none; }
+.edit-label { width:95rpx; flex-shrink:0; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.edit-input { flex:1; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; }
+.course-picker { flex:1; min-width:0; }
+.course-picker-value { display:flex; align-items:center; justify-content:space-between; min-height:100rpx; color:var(--color-brand); font-size:var(--font-size-normal); font-weight:700; }
+.course-picker-value image { width:24rpx; height:24rpx; margin-left:16rpx; }
+.notes-field { align-items:flex-start; padding-top:27rpx; }
+.edit-textarea { flex:1; height:190rpx; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; line-height:1.5; }
+.save-dock { position:fixed; left:0; right:0; bottom:0; box-sizing:border-box; padding:22rpx 32rpx calc(24rpx + env(safe-area-inset-bottom)); background:var(--color-surface); border-top:2rpx solid var(--color-border); box-shadow:var(--shadow-dock); }
+.save-dock button { width:100%; }

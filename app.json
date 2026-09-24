@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/today/index",
+    "pages/class-detail/index",
+    "pages/students/index",
+    "pages/student-detail/index",
+    "pages/student-edit/index",
+    "pages/me/index",
+    "pages/my-classes/index",
+    "pages/class-editor/index",
+    "pages/financial-reports/index",
+    "pages/about/index"
+  ],
+  "window": {
+    "backgroundColor": "#f7faf6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#f7faf6",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "小兔排课"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

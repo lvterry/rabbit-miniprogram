@@ -1,0 +1,11 @@
+<view class="tab-bar">
+  <view class="tab-item {{active === 'today' ? 'active' : ''}}" data-page="today" bindtap="switchPage">
+    <view class="tab-symbol"><image src="{{active === 'today' ? '/assets/tab-calendar-active.svg' : '/assets/tab-calendar.svg'}}" mode="aspectFit" /></view><text>今日</text>
+  </view>
+  <view class="tab-item {{active === 'students' ? 'active' : ''}}" data-page="students" bindtap="switchPage">
+    <view class="tab-symbol"><image src="{{active === 'students' ? '/assets/tab-users-active.svg' : '/assets/tab-users.svg'}}" mode="aspectFit" /></view><text>学员</text>
+  </view>
+  <view class="tab-item {{active === 'me' ? 'active' : ''}}" data-page="me" bindtap="switchPage">
+    <view class="tab-symbol"><image src="{{active === 'me' ? '/assets/tab-user-active.svg' : '/assets/tab-user.svg'}}" mode="aspectFit" /></view><text>我的</text>
+  </view>
+</view>

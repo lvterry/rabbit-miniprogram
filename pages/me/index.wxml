@@ -1,0 +1,21 @@
+<view class="page-shell">
+  <view wx:if="{{!loggedIn}}" class="account-card card" bindtap="login">
+    <view class="account-avatar guest-avatar"><image src="/assets/avatar-placeholder.svg" mode="aspectFit" /></view>
+    <view class="account-copy"><text class="account-name">微信登录</text><text class="account-description">登录后同步课程数据</text></view>
+    <text class="menu-chevron">›</text>
+  </view>
+  <view wx:else class="account-card card">
+    <view class="account-avatar logged-avatar">{{initial}}</view>
+    <view class="account-copy"><text class="account-name">{{name}}</text><text class="account-description">欢迎回来</text></view>
+  </view>
+
+  <view class="menu-card card">
+    <view class="menu-row" data-page="my-classes" bindtap="openPage"><text>我的课程</text><text class="menu-chevron">›</text></view>
+    <view class="menu-row" data-page="financial-reports" bindtap="openPage"><text>财务报表</text><text class="menu-chevron">›</text></view>
+    <view class="menu-row" data-page="about" bindtap="openPage"><text>关于</text><text class="menu-chevron">›</text></view>
+  </view>
+  <view wx:if="{{loggedIn}}" class="logout-wrap">
+    <button class="logout-button" bindtap="logout">退出登录</button>
+  </view>
+</view>
+<tab-bar active="me" />
