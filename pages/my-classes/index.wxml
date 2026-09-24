@@ -1,15 +1,14 @@
 <view class="page-shell my-classes-page">
-  <view wx:for="{{offerings}}" wx:key="id" class="offering-card card" data-id="{{item.id}}" bindtap="editClass">
-    <view class="offering-head"><text class="offering-name">{{item.name}}</text></view>
-    <text class="offering-description {{item.description ? '' : 'empty-description'}}">{{item.description || '暂无课程介绍'}}</text>
-    <view class="offering-footer" data-id="{{item.id}}" catchtap="openRoster"><text class="action-link">{{item.studentCount}} 位学员 →</text></view>
+  <view wx:if="{{loading}}" class="course-state">正在加载课程…</view>
+  <view wx:elif="{{error}}" class="course-state">
+    <text>{{error}}</text>
+    <button class="plain-button" bindtap="loadCourses">重试</button>
+  </view>
+  <view wx:elif="{{courses.length === 0}}" class="course-state">还没有课程，点击下方添加课程</view>
+  <view wx:for="{{courses}}" wx:for-item="course" wx:key="id" class="offering-card card">
+    <view class="offering-head"><text class="offering-name">{{course.name}}</text></view>
+    <text class="offering-description {{course.description ? '' : 'empty-description'}}">{{course.description || '暂无课程介绍'}}</text>
+    <view class="offering-footer"><text>暂不支持编辑</text></view>
   </view>
   <view class="add-class-card" bindtap="addClass"><image src="/assets/plus.svg" mode="aspectFit" /><text>添加课程</text></view>
 </view>
-
-<bottom-sheet visible="{{rosterOpen}}" title="{{rosterTitle}}" max-height="78vh" bind:close="closeRoster">
-    <view wx:if="{{roster.length === 0}}" class="roster-empty">这门课程还没有学员</view>
-    <view wx:for="{{roster}}" wx:key="id" class="roster-row" data-id="{{item.id}}" bindtap="openStudent">
-      <view class="roster-avatar" style="background:{{item.color}}">{{item.initial}}</view><text class="roster-name">{{item.name}}</text><text class="roster-chevron">›</text>
-    </view>
-</bottom-sheet>

@@ -1,7 +1,7 @@
 <view class="page-shell">
   <view wx:if="{{!loggedIn}}" class="account-card card" bindtap="login">
     <view class="account-avatar guest-avatar"><image src="/assets/avatar-placeholder.svg" mode="aspectFit" /></view>
-    <view class="account-copy"><text class="account-name">微信登录</text><text class="account-description">登录后同步课程数据</text></view>
+    <view class="account-copy"><text class="account-name">进入演示账号</text><text class="account-description">无需操作即可创建云端课程</text></view>
     <text class="menu-chevron">›</text>
   </view>
   <view wx:else class="account-card card">

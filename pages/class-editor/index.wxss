@@ -6,6 +6,7 @@
 .editor-input { flex:1; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; }
 .description-field { align-items:flex-start; padding:27rpx 0; }
 .editor-textarea { flex:1; height:235rpx; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; line-height:1.5; }
+.form-error { display:block; padding:10rpx 0 18rpx 134rpx; color:var(--color-status-cancelled); font-size:var(--font-size-small); }
 .editor-dock { position:fixed; left:0; right:0; bottom:0; z-index:10; padding:20rpx 32rpx calc(22rpx + env(safe-area-inset-bottom)); background:var(--color-surface); border-top:2rpx solid var(--color-border); }
 .editor-dock button { width:100%; margin:0; }
 .editor-dock .poster-button { margin-top:15rpx; }

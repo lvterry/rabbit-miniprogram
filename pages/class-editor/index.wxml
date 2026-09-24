@@ -1,7 +1,9 @@
 <view class="page-shell editor-page">
   <view class="editor-card card">
     <view class="editor-field"><text class="editor-label">课程名称</text><input class="editor-input" value="{{name}}" bindinput="onNameInput" placeholder="填写课程名称" maxlength="40" /></view>
+    <text wx:if="{{nameError}}" class="form-error">{{nameError}}</text>
     <view class="editor-field description-field"><text class="editor-label">课程介绍</text><textarea class="editor-textarea" value="{{description}}" bindinput="onDescriptionInput" placeholder="介绍这门课程" maxlength="500" /></view>
+    <text wx:if="{{saveError}}" class="form-error">{{saveError}}</text>
   </view>
 </view>
 <view class="editor-dock"><button class="primary-button" loading="{{saving}}" bindtap="save">保存</button><button class="secondary-button poster-button" bindtap="openPoster">分享海报</button></view>

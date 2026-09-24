@@ -1,5 +1,7 @@
+const { createCourse } = require('../../utils/course-api')
+
 Page({
-  data: { name: '', description: '', posterOpen: false, saving: false },
+  data: { name: '', description: '', posterOpen: false, saving: false, nameError: '', saveError: '' },
 
   onLoad(options) {
     this.offeringId = options.id || ''
@@ -9,16 +11,41 @@ Page({
     if (offering) this.setData({ name: offering.name, description: offering.description })
   },
 
-  onNameInput(event) { this.setData({ name: event.detail.value }) },
-  onDescriptionInput(event) { this.setData({ description: event.detail.value }) },
+  onNameInput(event) { this.setData({ name: event.detail.value, nameError: '', saveError: '' }) },
+  onDescriptionInput(event) { this.setData({ description: event.detail.value, saveError: '' }) },
 
   save() {
     if (this.data.saving) return
+    const name = this.data.name.trim()
+    const description = this.data.description.trim()
+    if (!name) {
+      this.setData({ nameError: '请填写课程名称' })
+      return
+    }
+
+    if (!this.offeringId) {
+      this.setData({ saving: true, nameError: '', saveError: '' })
+      return createCourse({ name, description })
+        .then(() => {
+          wx.showToast({ title: '课程已保存到云端', icon: 'success' })
+          setTimeout(() => wx.navigateBack(), 400)
+        })
+        .catch(error => {
+          const nameError = error.statusCode === 409 ? '课程名称已存在' : ''
+          let saveError = ''
+          if (!nameError) {
+            saveError = error.statusCode === 401
+              ? '无法识别微信用户，请重试'
+              : '云端保存失败，请稍后重试'
+          }
+          this.setData({ saving: false, nameError, saveError })
+        })
+    }
+
     this.setData({ saving: true })
     const offering = getApp().saveOffering(this.offeringId, this.data)
     if (!offering) {
-      this.setData({ saving: false })
-      wx.showToast({ title: '请填写不重复的课程名称', icon: 'none' })
+      this.setData({ saving: false, nameError: '请填写不重复的课程名称' })
       return
     }
     wx.showToast({ title: '课程已保存', icon: 'success' })

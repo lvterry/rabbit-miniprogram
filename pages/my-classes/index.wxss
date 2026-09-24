@@ -1,15 +1,11 @@
 .my-classes-page { padding-bottom:100rpx; }
+.course-state { padding:42rpx 0; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.course-state button { margin:18rpx auto 0; }
 .offering-card { padding:27rpx 29rpx; margin-bottom:18rpx; }
 .offering-head { display:flex; align-items:center; justify-content:space-between; gap:16rpx; }
 .offering-name { flex:1; min-width:0; font-size:var(--font-size-h2); font-weight:720; color:var(--color-text); }
-.action-link { flex-shrink:0; color:var(--color-brand); font-size:var(--font-size-small); font-weight:650; }
 .offering-description { display:block; margin-top:18rpx; color:var(--color-text-weak); font-size:var(--font-size-normal); line-height:1.55; }
 .empty-description { color:var(--color-text-weak); }
-.offering-footer { margin-top:24rpx; padding-top:20rpx; border-top:2rpx solid var(--color-border); }
+.offering-footer { margin-top:24rpx; padding-top:20rpx; border-top:2rpx solid var(--color-border); color:var(--color-text-weak); font-size:var(--font-size-small); }
 .add-class-card { min-height:166rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8rpx; border:3rpx dashed var(--color-border); border-radius:30rpx; background:var(--color-surface-muted); color:var(--color-text-weak); font-size:var(--font-size-normal); font-weight:650; }
 .add-class-card image { width:36rpx; height:36rpx; padding:7rpx; border-radius:50%; background:var(--color-brand); }
-.roster-empty { padding:42rpx 0; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-small); }
-.roster-row { min-height:94rpx; display:flex; align-items:center; gap:18rpx; border-top:2rpx solid var(--color-border); }
-.roster-avatar { width:58rpx; height:58rpx; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--color-text); font-size:var(--font-size-small); font-weight:700; }
-.roster-name { flex:1; font-size:var(--font-size-normal); font-weight:600; }
-.roster-chevron { color:var(--color-text-weak); font-size:var(--font-size-h1); }

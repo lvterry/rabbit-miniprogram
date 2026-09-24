@@ -1,32 +1,26 @@
+const { listCourses } = require('../../utils/course-api')
+
 Page({
-  data: { offerings: [], rosterOpen: false, roster: [], rosterTitle: '' },
+  data: { courses: [], loading: false, error: '' },
 
-  onShow() {
-    const app = getApp()
-    this.setData({
-      offerings: app.store.offerings.map(item => ({
-        ...item,
-        studentCount: item.studentIds.filter(id => !!app.getStudent(id)).length
-      }))
-    })
-  },
+  onShow() { this.loadCourses() },
 
-  openRoster(event) {
-    const offering = getApp().getOffering(event.currentTarget.dataset.id)
-    if (!offering) return
-    const roster = offering.studentIds.map(id => getApp().getStudent(id)).filter(Boolean)
-    this.setData({ rosterOpen: true, roster, rosterTitle: `${offering.name}的学员` })
-  },
+  loadCourses() {
+    const requestId = (this.courseRequestId || 0) + 1
+    this.courseRequestId = requestId
+    this.setData({ courses: [], loading: true, error: '' })
 
-  closeRoster() { this.setData({ rosterOpen: false }) },
-
-  openStudent(event) {
-    this.closeRoster()
-    wx.navigateTo({ url: `/pages/student-detail/index?id=${event.currentTarget.dataset.id}` })
-  },
-
-  editClass(event) {
-    wx.navigateTo({ url: `/pages/class-editor/index?id=${event.currentTarget.dataset.id}` })
+    return listCourses()
+      .then(courses => {
+        if (requestId === this.courseRequestId) this.setData({ courses, loading: false })
+      })
+      .catch(error => {
+        if (requestId !== this.courseRequestId) return
+        let message = '云端课程加载失败，请重试'
+        if (error.statusCode === 401) message = '无法识别微信用户，请重试'
+        if (error.statusCode === 404) message = '课程服务尚未部署'
+        this.setData({ loading: false, error: message })
+      })
   },
 
   addClass() { wx.navigateTo({ url: '/pages/class-editor/index' }) }
