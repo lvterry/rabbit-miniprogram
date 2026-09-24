@@ -34,6 +34,10 @@ Page({
       })
   },
 
+  openStudent(event) {
+    wx.navigateTo({ url: `/pages/student-detail/index?id=${event.currentTarget.dataset.id}` })
+  },
+
   openAddSheet() {
     this.setData({
       addSheet: true, courses: [], courseOptions: [{ name: '暂不关联课程' }], coursesError: '',

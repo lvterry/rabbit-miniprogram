@@ -9,6 +9,7 @@
 .student-copy { display:flex; flex-direction:column; gap:8rpx; flex:1; min-width:0; }
 .student-name { font-size:var(--font-size-normal); font-weight:700; }
 .student-course { color:var(--color-text-weak); font-size:var(--font-size-small); }
+.arrow { margin-left:12rpx; color:var(--color-text-weak); font-size:var(--font-size-h1); }
 button.add-student-button { position:fixed; z-index:25; right:34rpx; bottom:210rpx; width:96rpx; min-width:96rpx; max-width:96rpx; height:96rpx; min-height:96rpx; max-height:96rpx; box-sizing:border-box; border-radius:50%; margin:0; padding:0; display:flex; align-items:center; justify-content:center; line-height:96rpx; background:var(--color-brand); box-shadow:var(--shadow-button); }
 .add-student-button image { display:block; width:38rpx; height:38rpx; }
 .sheet-fields { display:flex; flex-direction:column; }

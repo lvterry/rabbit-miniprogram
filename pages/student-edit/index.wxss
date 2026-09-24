@@ -1,4 +1,7 @@
 .edit-student-page { padding-bottom:180rpx; }
+.edit-state,.edit-error { padding:24rpx 10rpx; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-small); }
+.edit-error { color:var(--color-status-cancelled); }
+.edit-error button { margin:10rpx auto 0; }
 .edit-card { padding:10rpx 30rpx; }
 .edit-field { display:flex; align-items:center; gap:20rpx; min-height:100rpx; border-bottom:2rpx solid var(--color-border); }
 .edit-field:last-child { border-bottom:none; }

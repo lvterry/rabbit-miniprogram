@@ -1,3 +1,5 @@
+.detail-state { padding:42rpx 32rpx; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.detail-state button { margin:18rpx auto 0; }
 .student-detail-page { padding-bottom:220rpx; }
 .student-profile { padding:10rpx 30rpx; }
 .profile-title-row { display:flex; align-items:center; justify-content:space-between; padding:24rpx 0; }

@@ -1,8 +1,10 @@
 <view class="page-shell edit-student-page">
-  <view class="edit-card card">
-    <view class="edit-field"><text class="edit-label">姓名</text><input class="edit-input" value="{{name}}" bindinput="onNameInput" placeholder="学员姓名" /></view>
-    <view class="edit-field"><text class="edit-label">课程</text><picker class="course-picker" mode="selector" range="{{offeringNames}}" value="{{classIndex}}" bindchange="onClassChange"><view class="course-picker-value"><text>{{className || '请选择课程'}}</text><image src="/assets/chevron-down.svg" mode="aspectFit" /></view></picker></view>
+  <view wx:if="{{loading}}" class="edit-state">正在加载学员资料…</view>
+  <view wx:if="{{error}}" class="edit-error">{{error}}<button wx:if="{{!saving}}" class="plain-button" bindtap="refresh">重试</button></view>
+  <view wx:if="{{!loading}}" class="edit-card card">
+    <view class="edit-field"><text class="edit-label">姓名</text><input class="edit-input" value="{{name}}" maxlength="40" bindinput="onNameInput" placeholder="学员姓名" /></view>
+    <view class="edit-field"><text class="edit-label">课程</text><picker class="course-picker" mode="selector" range="{{offeringNames}}" value="{{classIndex}}" bindchange="onClassChange"><view class="course-picker-value"><text>{{className || (source === 'cloud' ? '暂不关联课程' : '请选择课程')}}</text><image src="/assets/chevron-down.svg" mode="aspectFit" /></view></picker></view>
     <view class="edit-field notes-field"><text class="edit-label">备注</text><textarea class="edit-textarea" value="{{notes}}" bindinput="onNotesInput" placeholder="添加学员备注" maxlength="300" /></view>
   </view>
 </view>
-<view class="save-dock"><button class="primary-button" bindtap="save">保存</button></view>
+<view class="save-dock"><button class="primary-button" loading="{{saving}}" disabled="{{saving || loading}}" bindtap="save">保存</button></view>
