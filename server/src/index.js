@@ -1,18 +1,8 @@
-const express = require('express')
+const { createApp } = require('./app')
 
-const app = express()
+const app = createApp({ teacherOpenid: process.env.TEACHER_OPENID })
 const port = Number(process.env.PORT || 80)
 
-app.use(express.json())
-
-app.get('/health', (req, res) => {
-  res.json({ ok: true, service: 'rabbit-api' })
-})
-
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' })
-})
-
 app.listen(port, '0.0.0.0', () => {
-  console.log(`rabbit-api listening on 0.0.0.0:${port}`)
+  console.log(`rabbit-api listening on 0.0.0.0:${port}; teacher account ${process.env.TEACHER_OPENID ? 'configured' : 'not configured'}`)
 })
