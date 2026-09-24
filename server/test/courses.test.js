@@ -89,3 +89,46 @@ test('temporary OpenID debug route is removed', async () => {
     assert.deepEqual(await response.json(), { error: 'Not Found' })
   })
 })
+
+test('course details and updates are scoped to the WeChat user', async () => {
+  await withServer(createApp(), async baseUrl => {
+    const request = (path, method, headers, body) => fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { 'content-type': 'application/json', ...headers },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) })
+    })
+    const createdResponse = await request('/courses', 'POST', userOneHeaders, {
+      name: '西语入门', description: '初级课程'
+    })
+    const created = await createdResponse.json()
+    assert.equal(createdResponse.status, 201)
+
+    const detailResponse = await request(`/courses/${created.id}`, 'GET', userOneHeaders)
+    assert.equal(detailResponse.status, 200)
+    assert.deepEqual(await detailResponse.json(), { course: created })
+    assert.equal((await request(`/courses/${created.id}`, 'GET', userTwoHeaders)).status, 404)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', {}, { name: '新名称' })).status, 401)
+
+    const updatedResponse = await request(`/courses/${created.id}`, 'PATCH', userOneHeaders, {
+      name: ' 西语进阶 ', description: ' 适合有基础的学员 '
+    })
+    assert.equal(updatedResponse.status, 200)
+    const updated = (await updatedResponse.json()).course
+    assert.equal(updated.id, created.id)
+    assert.equal(updated.name, '西语进阶')
+    assert.equal(updated.description, '适合有基础的学员')
+    assert.equal(updated.createdAt, created.createdAt)
+    assert.equal('ownerOpenid' in updated, false)
+
+    assert.equal((await request('/courses', 'POST', userOneHeaders, { name: '已占用' })).status, 201)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', userOneHeaders, { name: '已占用' })).status, 409)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', userOneHeaders, { name: ' ' })).status, 400)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', userOneHeaders, { name: 'x'.repeat(41) })).status, 400)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', userOneHeaders, { name: '新名称', description: 'x'.repeat(501) })).status, 400)
+    assert.equal((await request('/courses/missing', 'PATCH', userOneHeaders, { name: '新名称' })).status, 404)
+    assert.equal((await request(`/courses/${created.id}`, 'PATCH', userTwoHeaders, { name: '他人的课程' })).status, 404)
+
+    const list = await request('/courses', 'GET', userOneHeaders)
+    assert.deepEqual((await list.json()).courses.map(course => course.name).sort(), ['已占用', '西语进阶'])
+  })
+})

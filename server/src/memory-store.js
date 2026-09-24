@@ -31,6 +31,11 @@ function createMemoryStore() {
       return courses.filter(course => course.ownerOpenid === ownerOpenid).map(publicCourse)
     },
 
+    async getCourse(ownerOpenid, courseId) {
+      const course = findCourse(ownerOpenid, courseId)
+      return course ? publicCourse(course) : null
+    },
+
     async createCourse(course) {
       if (courses.some(item => item.ownerOpenid === course.ownerOpenid && item.name === course.name)) {
         const error = new Error('Course name already exists')
@@ -38,6 +43,18 @@ function createMemoryStore() {
         throw error
       }
       courses.push(course)
+      return publicCourse(course)
+    },
+
+    async updateCourse(ownerOpenid, courseId, fields) {
+      const course = findCourse(ownerOpenid, courseId)
+      if (!course) return null
+      if (courses.some(item => item.ownerOpenid === ownerOpenid && item.id !== courseId && item.name === fields.name)) {
+        const error = new Error('Course name already exists')
+        error.code = 'COURSE_NAME_EXISTS'
+        throw error
+      }
+      Object.assign(course, fields)
       return publicCourse(course)
     },
 

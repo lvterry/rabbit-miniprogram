@@ -72,6 +72,16 @@ function createMysqlStore(pool) {
       return rows
     },
 
+    async getCourse(ownerOpenid, courseId) {
+      const [rows] = await pool.execute(
+        `SELECT id, name, description, status,
+                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt
+           FROM courses WHERE id = ? AND owner_openid = ?`,
+        [courseId, ownerOpenid]
+      )
+      return rows[0] || null
+    },
+
     async createCourse(course) {
       try {
         await pool.execute(
@@ -85,6 +95,19 @@ function createMysqlStore(pool) {
       }
       const { ownerOpenid, ...result } = course
       return result
+    },
+
+    async updateCourse(ownerOpenid, courseId, fields) {
+      try {
+        await pool.execute(
+          'UPDATE courses SET name = ?, description = ? WHERE id = ? AND owner_openid = ?',
+          [fields.name, fields.description, courseId, ownerOpenid]
+        )
+      } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') throw storeError('COURSE_NAME_EXISTS', 'Course name already exists')
+        throw error
+      }
+      return this.getCourse(ownerOpenid, courseId)
     },
 
     async listStudents(ownerOpenid) {

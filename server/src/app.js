@@ -24,6 +24,12 @@ function createApp({ store = createMemoryStore() } = {}) {
     res.json({ courses: await store.listCourses(req.ownerOpenid) })
   })
 
+  app.get('/courses/:courseId', requireWeChatUser, async (req, res) => {
+    const course = await store.getCourse(req.ownerOpenid, req.params.courseId)
+    if (!course) return res.status(404).json({ error: 'Course not found' })
+    res.json({ course })
+  })
+
   app.post('/courses', requireWeChatUser, async (req, res) => {
     const { name, description = '' } = req.body || {}
     if (typeof name !== 'string' || typeof description !== 'string') {
@@ -43,6 +49,23 @@ function createApp({ store = createMemoryStore() } = {}) {
     }
     const created = await store.createCourse({ ...course, ownerOpenid: req.ownerOpenid })
     res.status(201).json(created)
+  })
+
+  app.patch('/courses/:courseId', requireWeChatUser, async (req, res) => {
+    const { name, description = '' } = req.body || {}
+    if (typeof name !== 'string' || typeof description !== 'string') {
+      return res.status(400).json({ error: 'Invalid course fields' })
+    }
+    const trimmedName = name.trim()
+    const trimmedDescription = description.trim()
+    if (!trimmedName || trimmedName.length > 40 || trimmedDescription.length > 500) {
+      return res.status(400).json({ error: 'Invalid course fields' })
+    }
+    const course = await store.updateCourse(req.ownerOpenid, req.params.courseId, {
+      name: trimmedName, description: trimmedDescription
+    })
+    if (!course) return res.status(404).json({ error: 'Course not found' })
+    res.json({ course })
   })
 
   app.get('/students', requireWeChatUser, async (req, res) => {
