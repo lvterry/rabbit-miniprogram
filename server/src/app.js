@@ -1,7 +1,7 @@
 const { randomUUID } = require('node:crypto')
 const express = require('express')
 
-function createApp({ teacherOpenid = '' } = {}) {
+function createApp() {
   const app = express()
   const courses = []
 
@@ -11,39 +11,24 @@ function createApp({ teacherOpenid = '' } = {}) {
     res.json({ ok: true, service: 'rabbit-api' })
   })
 
-  // Temporary helper for configuring the single-teacher allowlist.
-  app.get('/debug/openid', (req, res) => {
+  function requireWeChatUser(req, res, next) {
     const openid = req.get('x-wx-openid')
     if (!req.get('x-wx-source') || !openid) {
       return res.status(401).json({ error: 'WeChat identity required' })
     }
-    res.json({ openid })
-  })
-
-  function requireTeacher(req, res, next) {
-    const openid = req.get('x-wx-openid')
-    if (!req.get('x-wx-source') || !openid) {
-      return res.status(401).json({ error: 'WeChat identity required' })
-    }
-    if (!teacherOpenid) {
-      return res.status(503).json({ error: 'Teacher account not configured' })
-    }
-    if (openid !== teacherOpenid) {
-      return res.status(403).json({ error: 'Teacher access required' })
-    }
-    req.teacherOpenid = openid
+    req.ownerOpenid = openid
     next()
   }
 
-  app.get('/courses', requireTeacher, (req, res) => {
+  app.get('/courses', requireWeChatUser, (req, res) => {
     res.json({
       courses: courses
-        .filter(course => course.teacherOpenid === req.teacherOpenid)
-        .map(({ teacherOpenid, ...course }) => course)
+        .filter(course => course.ownerOpenid === req.ownerOpenid)
+        .map(({ ownerOpenid, ...course }) => course)
     })
   })
 
-  app.post('/courses', requireTeacher, (req, res) => {
+  app.post('/courses', requireWeChatUser, (req, res) => {
     const { name, description = '' } = req.body || {}
     if (typeof name !== 'string' || typeof description !== 'string') {
       return res.status(400).json({ error: 'Invalid course fields' })
@@ -53,7 +38,7 @@ function createApp({ teacherOpenid = '' } = {}) {
     if (!trimmedName || trimmedName.length > 40 || trimmedDescription.length > 500) {
       return res.status(400).json({ error: 'Invalid course fields' })
     }
-    if (courses.some(course => course.teacherOpenid === req.teacherOpenid && course.name === trimmedName)) {
+    if (courses.some(course => course.ownerOpenid === req.ownerOpenid && course.name === trimmedName)) {
       return res.status(409).json({ error: 'Course name already exists' })
     }
 
@@ -64,7 +49,7 @@ function createApp({ teacherOpenid = '' } = {}) {
       status: 'active',
       createdAt: new Date().toISOString()
     }
-    courses.push({ ...course, teacherOpenid: req.teacherOpenid })
+    courses.push({ ...course, ownerOpenid: req.ownerOpenid })
     res.status(201).json(course)
   })
 
