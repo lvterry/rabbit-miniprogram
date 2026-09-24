@@ -4,6 +4,7 @@ const express = require('express')
 function createApp() {
   const app = express()
   const courses = []
+  const students = []
 
   app.use(express.json())
 
@@ -51,6 +52,42 @@ function createApp() {
     }
     courses.push({ ...course, ownerOpenid: req.ownerOpenid })
     res.status(201).json(course)
+  })
+
+  function publicStudent(student) {
+    const course = courses.find(item => item.id === student.courseId)
+    const { ownerOpenid, ...fields } = student
+    return { ...fields, courseName: course ? course.name : '', isActive: !!course }
+  }
+
+  app.get('/students', requireWeChatUser, (req, res) => {
+    res.json({ students: students.filter(student => student.ownerOpenid === req.ownerOpenid).map(publicStudent) })
+  })
+
+  app.post('/students', requireWeChatUser, (req, res) => {
+    const { name, courseId = '', notes = '' } = req.body || {}
+    if (typeof name !== 'string' || typeof courseId !== 'string' || typeof notes !== 'string') {
+      return res.status(400).json({ error: 'Invalid student fields' })
+    }
+    const trimmedName = name.trim()
+    const trimmedNotes = notes.trim()
+    if (!trimmedName || trimmedName.length > 40 || trimmedNotes.length > 200) {
+      return res.status(400).json({ error: 'Invalid student fields' })
+    }
+    if (courseId && !courses.some(item => item.id === courseId && item.ownerOpenid === req.ownerOpenid)) {
+      return res.status(404).json({ error: 'Course not found' })
+    }
+
+    const student = {
+      id: randomUUID(),
+      name: trimmedName,
+      courseId,
+      notes: trimmedNotes,
+      createdAt: new Date().toISOString(),
+      ownerOpenid: req.ownerOpenid
+    }
+    students.unshift(student)
+    res.status(201).json(publicStudent(student))
   })
 
   app.use((req, res) => {
