@@ -1,20 +1,25 @@
 .students-page { padding-bottom:250rpx; }
+.list-state { padding:42rpx 0; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.list-state button { margin:18rpx auto 0; }
 .student-section { margin-top:18rpx; }
 .inactive-section { margin-top:42rpx; }
 .section-heading { display:flex; justify-content:space-between; align-items:baseline; margin:0 4rpx 20rpx; }
 .student-card { display:flex; align-items:center; padding:23rpx; margin-bottom:17rpx; min-height:126rpx; box-sizing:border-box; }
-.avatar { width:78rpx; height:78rpx; border-radius:26rpx; display:flex; align-items:center; justify-content:center; color:var(--color-text); font-size:var(--font-size-h2); font-weight:750; margin-right:22rpx; flex-shrink:0; }
+.avatar { width:78rpx; height:78rpx; border-radius:26rpx; display:flex; align-items:center; justify-content:center; background:var(--color-brand-soft); color:var(--color-text); font-size:var(--font-size-h2); font-weight:750; margin-right:22rpx; flex-shrink:0; }
 .student-copy { display:flex; flex-direction:column; gap:8rpx; flex:1; min-width:0; }
 .student-name { font-size:var(--font-size-normal); font-weight:700; }
-.student-count { color:var(--color-text-weak); font-size:var(--font-size-small); }
-.student-trailing { display:flex; align-self:stretch; align-items:center; gap:12rpx; flex-shrink:0; }
-.credit-count { color:var(--color-text); font-size:var(--font-size-small); font-weight:650; }
-.arrow { display:block; color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; }
+.student-course { color:var(--color-text-weak); font-size:var(--font-size-small); }
 button.add-student-button { position:fixed; z-index:25; right:34rpx; bottom:210rpx; width:96rpx; min-width:96rpx; max-width:96rpx; height:96rpx; min-height:96rpx; max-height:96rpx; box-sizing:border-box; border-radius:50%; margin:0; padding:0; display:flex; align-items:center; justify-content:center; line-height:96rpx; background:var(--color-brand); box-shadow:var(--shadow-button); }
 .add-student-button image { display:block; width:38rpx; height:38rpx; }
 .sheet-fields { display:flex; flex-direction:column; }
 .input-label { font-size:var(--font-size-normal); color:var(--color-text-weak); font-weight:400; margin-bottom:14rpx; }
 .field-gap { margin-top:22rpx; }
 .sheet-input { width:100%; box-sizing:border-box; height:84rpx; background:var(--color-surface-muted); border:2rpx solid var(--color-border); border-radius:20rpx; padding:0 22rpx; font-size:var(--font-size-normal); font-weight:700; color:var(--color-text); }
+.course-picker { min-height:84rpx; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:16rpx; background:var(--color-surface-muted); border:2rpx solid var(--color-border); border-radius:20rpx; padding:0 22rpx; font-size:var(--font-size-normal); font-weight:700; color:var(--color-text); }
+.course-picker image { width:24rpx; height:24rpx; flex-shrink:0; }
+.picker-state { color:var(--color-text-weak); font-size:var(--font-size-small); }
+.picker-state button { margin:0; }
+.add-course-link { margin:8rpx 0 0; }
+.form-error { display:block; margin-top:16rpx; color:var(--color-status-cancelled); font-size:var(--font-size-small); }
 .sheet-textarea { width:100%; height:130rpx; box-sizing:border-box; background:var(--color-surface-muted); border:2rpx solid var(--color-border); border-radius:20rpx; padding:20rpx; font-size:var(--font-size-normal); font-weight:700; color:var(--color-text); }
 .sheet-primary { width:100%; margin:28rpx 0 0; }

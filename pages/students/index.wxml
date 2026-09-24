@@ -1,19 +1,21 @@
 <view class="page-shell students-page">
-  <view wx:if="{{activeStudents.length}}" class="student-section">
+  <view wx:if="{{loading}}" class="list-state">正在加载学员…</view>
+  <view wx:elif="{{error}}" class="list-state"><text>{{error}}</text><button class="plain-button" bindtap="loadStudents">重试</button></view>
+  <view wx:elif="{{activeStudents.length === 0 && inactiveStudents.length === 0}}" class="list-state">还没有学员，点击右下角添加学员</view>
+
+  <view wx:if="{{!loading && !error && activeStudents.length}}" class="student-section">
     <view class="section-heading"><text class="section-title">活跃学员</text></view>
-    <view wx:for="{{activeStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
-      <view class="avatar" style="background:{{item.color}}">{{item.initial}}</view>
-      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-count">{{item.learningLabel}}</text></view>
-      <view class="student-trailing"><text class="credit-count">{{item.remainingCredits}}/{{item.totalCredits}}</text><text class="arrow">›</text></view>
+    <view wx:for="{{activeStudents}}" wx:key="id" class="student-card card">
+      <view class="avatar">{{item.initial}}</view>
+      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-course">{{item.courseName}}</text></view>
     </view>
   </view>
 
-  <view wx:if="{{inactiveStudents.length}}" class="student-section inactive-section">
+  <view wx:if="{{!loading && !error && inactiveStudents.length}}" class="student-section inactive-section">
     <view class="section-heading"><text class="section-title">未活跃</text></view>
-    <view wx:for="{{inactiveStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
-      <view class="avatar" style="background:{{item.color}}">{{item.initial}}</view>
-      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-count">{{item.learningLabel}}</text></view>
-      <view class="student-trailing"><text class="credit-count">{{item.remainingCredits}}/{{item.totalCredits}}</text><text class="arrow">›</text></view>
+    <view wx:for="{{inactiveStudents}}" wx:key="id" class="student-card card">
+      <view class="avatar">{{item.initial}}</view>
+      <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-course">未关联课程</text></view>
     </view>
   </view>
 </view>
@@ -23,9 +25,16 @@
 
 <bottom-sheet visible="{{addSheet}}" title="添加学员" bind:close="closeAddSheet">
     <view class="sheet-fields">
-      <text class="input-label">姓名</text><input class="sheet-input" placeholder="输入学员姓名" value="{{newName}}" bindinput="onNameInput" />
-      <text class="input-label field-gap">课程</text><input class="sheet-input" placeholder="输入课程名称" value="{{newClassName}}" bindinput="onClassInput" />
+      <text class="input-label">姓名</text><input class="sheet-input" placeholder="输入学员姓名" value="{{newName}}" maxlength="40" bindinput="onNameInput" />
+      <text class="input-label field-gap">课程（选填）</text>
+      <view wx:if="{{coursesLoading}}" class="picker-state">正在加载课程…</view>
+      <view wx:elif="{{coursesError}}" class="picker-state"><text>{{coursesError}}</text><button class="plain-button" bindtap="loadCourses">重试</button></view>
+      <picker wx:else mode="selector" range="{{courseOptions}}" range-key="name" value="{{newCourseIndex}}" bindchange="onCourseChange">
+        <view class="course-picker"><text>{{newCourseName || '暂不关联课程'}}</text><image src="/assets/chevron-down.svg" mode="aspectFit" /></view>
+      </picker>
+      <button wx:if="{{!coursesLoading && !coursesError && courses.length === 0}}" class="plain-button add-course-link" bindtap="goAddCourse">还没有课程？先添加课程</button>
       <text class="input-label field-gap">备注（选填）</text><textarea class="sheet-textarea" placeholder="添加学员备注" value="{{newNotes}}" maxlength="200" bindinput="onNotesInput" />
-      <button class="primary-button sheet-primary" bindtap="createStudent">创建学员</button>
+      <text wx:if="{{formError}}" class="form-error">{{formError}}</text>
+      <button class="primary-button sheet-primary" loading="{{saving}}" disabled="{{saving}}" bindtap="createStudent">创建学员</button>
     </view>
 </bottom-sheet>
