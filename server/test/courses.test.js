@@ -81,3 +81,12 @@ test('course routes require a configured teacher account', async () => {
     assert.deepEqual(await response.json(), { error: 'Teacher account not configured' })
   })
 })
+
+test('debug endpoint returns only the calling WeChat identity', async () => {
+  await withServer(createApp(), async baseUrl => {
+    assert.equal((await fetch(`${baseUrl}/debug/openid`)).status, 401)
+    const response = await fetch(`${baseUrl}/debug/openid`, { headers: teacherHeaders })
+    assert.equal(response.status, 200)
+    assert.deepEqual(await response.json(), { openid: 'teacher-one' })
+  })
+})

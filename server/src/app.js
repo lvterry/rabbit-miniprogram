@@ -11,6 +11,15 @@ function createApp({ teacherOpenid = '' } = {}) {
     res.json({ ok: true, service: 'rabbit-api' })
   })
 
+  // Temporary helper for configuring the single-teacher allowlist.
+  app.get('/debug/openid', (req, res) => {
+    const openid = req.get('x-wx-openid')
+    if (!req.get('x-wx-source') || !openid) {
+      return res.status(401).json({ error: 'WeChat identity required' })
+    }
+    res.json({ openid })
+  })
+
   function requireTeacher(req, res, next) {
     const openid = req.get('x-wx-openid')
     if (!req.get('x-wx-source') || !openid) {
