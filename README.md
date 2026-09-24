@@ -26,7 +26,7 @@
 
 ## Cloud Run 后端
 
-`server/` 是独立的 Express 服务，提供 `GET /health` 健康检查。进入该目录运行 `npm ci` 和 `npm start` 即可启动；默认监听 80 端口，也可通过 `PORT` 指定端口。
+`server/` 是独立的 Express 服务，提供 `GET /health` 健康检查。进入该目录运行 `npm ci` 和 `npm start` 即可启动；默认监听 80 端口，也可通过 `PORT` 指定端口。服务启动时会检查 MySQL 连接并自动创建所需数据表；数据库不可用或配置缺失时，服务会明确报错并退出。
 
 部署到微信云托管时，使用 `server/Dockerfile` 构建，并部署到现有服务 `express-2wy2`。如果控制台支持选择子目录，请将应用目录或构建上下文设为 `server/`，Dockerfile 设为该目录下的 `Dockerfile`。容器服务端口设为 80。部署完成后，在微信开发者工具控制台手动运行 `getApp().testCloudConnection()` 检查连接；小程序不会在启动时自动请求健康检查。
 
@@ -34,13 +34,7 @@
 
 `POST /courses` 接收课程名称 `name`（必填，最多 40 字）和介绍 `description`（可选，最多 500 字），成功时返回 201 和新课程。`GET /courses` 返回当前微信用户的课程列表。小程序通过 `wx.cloud.callContainer()` 调用时，无需点击演示账号入口；服务端从微信云托管转发的 `X-WX-OPENID` 读取用户身份，按用户隔离课程，不接受客户端提交的用户 ID。两个接口都要求 `X-WX-SOURCE`，无需配置 `TEACHER_OPENID`。
 
-本地可用测试身份模拟微信请求：
-
-```sh
-cd server
-npm ci
-PORT=8080 npm start
-```
+本地服务启动后，可用测试身份模拟微信请求：
 
 ```sh
 curl -i -X POST http://127.0.0.1:8080/courses \
@@ -54,4 +48,18 @@ curl -i http://127.0.0.1:8080/courses \
 
 `POST /students` 接收姓名 `name`（必填，最多 40 字）、课程 ID `courseId`（选填，必须属于当前微信用户）及备注 `notes`（选填，最多 200 字）；`GET /students` 返回当前用户的学员列表。未关联课程的学员归入「未活跃」，关联课程的学员归入「活跃学员」。小程序添加学员时从云端课程列表选择关联课程，也可以暂不关联。
 
-课程与学员数据目前仅保存在服务进程的内存中，重启或扩容后会丢失。小程序的课程和学员列表及创建流程使用云端数据；学员详情、编辑、课时和预约等页面仍使用本地模拟数据，云端学员列表暂不进入这些页面。不要将此版本用于保存正式数据。
+`GET /students/:studentId` 返回学员资料、课时记录和预约；`PATCH /students/:studentId` 更新姓名、课程关联和备注；`POST /students/:studentId/credits` 添加课时；`POST /students/:studentId/appointments` 添加预约。所有接口按微信用户隔离，只能操作自己的学员及课程。
+
+课程、学员、课时记录和预约现由 MySQL 持久化；每个微信用户的数据按 OpenID 隔离。预约暂时显示在学员详情中，不会进入首页的本地排课列表。其他本地演示学员仍使用本地模拟数据。切换存储后，之前仅保存在旧服务进程内存中的课程和学员不会迁移；新版本会从空的 MySQL 数据库开始。
+
+### MySQL 配置
+
+在微信云托管服务中关联或创建 MySQL 数据库，并在服务环境变量中配置 `MYSQL_ADDRESS`（数据库地址，支持 `host:port`）、`MYSQL_USERNAME` 和 `MYSQL_PASSWORD`。`MYSQL_DATABASE` 可选，默认使用 `nodejs_demo`；`MYSQL_HOST`、`MYSQL_PORT` 可用于分别指定地址和端口。密码只配置在云托管环境变量中，不要提交到代码仓库。数据库账号需要能连接该库并创建表。首次启动会自动创建课程、学员、课时和预约表。
+
+本地运行服务时也必须提供上述 MySQL 连接变量，例如：
+
+```sh
+cd server
+npm ci
+MYSQL_ADDRESS='数据库地址:端口' MYSQL_USERNAME='数据库用户名' MYSQL_PASSWORD='数据库密码' MYSQL_DATABASE='nodejs_demo' PORT=8080 npm start
+```

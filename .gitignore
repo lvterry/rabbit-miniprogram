@@ -4,3 +4,4 @@ miniprogram_npm/
 project.private.config.json
 .idea/
 .vscode/
+server/.env*

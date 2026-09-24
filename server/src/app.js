@@ -1,10 +1,9 @@
 const { randomUUID } = require('node:crypto')
 const express = require('express')
+const { createMemoryStore } = require('./memory-store')
 
-function createApp() {
+function createApp({ store = createMemoryStore() } = {}) {
   const app = express()
-  const courses = []
-  const students = []
 
   app.use(express.json())
 
@@ -21,15 +20,11 @@ function createApp() {
     next()
   }
 
-  app.get('/courses', requireWeChatUser, (req, res) => {
-    res.json({
-      courses: courses
-        .filter(course => course.ownerOpenid === req.ownerOpenid)
-        .map(({ ownerOpenid, ...course }) => course)
-    })
+  app.get('/courses', requireWeChatUser, async (req, res) => {
+    res.json({ courses: await store.listCourses(req.ownerOpenid) })
   })
 
-  app.post('/courses', requireWeChatUser, (req, res) => {
+  app.post('/courses', requireWeChatUser, async (req, res) => {
     const { name, description = '' } = req.body || {}
     if (typeof name !== 'string' || typeof description !== 'string') {
       return res.status(400).json({ error: 'Invalid course fields' })
@@ -39,10 +34,6 @@ function createApp() {
     if (!trimmedName || trimmedName.length > 40 || trimmedDescription.length > 500) {
       return res.status(400).json({ error: 'Invalid course fields' })
     }
-    if (courses.some(course => course.ownerOpenid === req.ownerOpenid && course.name === trimmedName)) {
-      return res.status(409).json({ error: 'Course name already exists' })
-    }
-
     const course = {
       id: randomUUID(),
       name: trimmedName,
@@ -50,34 +41,15 @@ function createApp() {
       status: 'active',
       createdAt: new Date().toISOString()
     }
-    courses.push({ ...course, ownerOpenid: req.ownerOpenid })
-    res.status(201).json(course)
+    const created = await store.createCourse({ ...course, ownerOpenid: req.ownerOpenid })
+    res.status(201).json(created)
   })
 
-  function publicStudent(student, includeDetails = false) {
-    const course = courses.find(item => item.id === student.courseId)
-    const { ownerOpenid, creditHistory, appointments, appointmentHistory, ...fields } = student
-    const result = { ...fields, courseName: course ? course.name : '', isActive: !!course }
-    if (includeDetails) {
-      result.creditHistory = creditHistory
-      result.appointments = appointments
-      result.appointmentHistory = appointmentHistory
-    }
-    return result
-  }
-
-  function requireOwnedStudent(req, res, next) {
-    const student = students.find(item => item.id === req.params.studentId && item.ownerOpenid === req.ownerOpenid)
-    if (!student) return res.status(404).json({ error: 'Student not found' })
-    req.student = student
-    next()
-  }
-
-  app.get('/students', requireWeChatUser, (req, res) => {
-    res.json({ students: students.filter(student => student.ownerOpenid === req.ownerOpenid).map(publicStudent) })
+  app.get('/students', requireWeChatUser, async (req, res) => {
+    res.json({ students: await store.listStudents(req.ownerOpenid) })
   })
 
-  app.post('/students', requireWeChatUser, (req, res) => {
+  app.post('/students', requireWeChatUser, async (req, res) => {
     const { name, courseId = '', notes = '' } = req.body || {}
     if (typeof name !== 'string' || typeof courseId !== 'string' || typeof notes !== 'string') {
       return res.status(400).json({ error: 'Invalid student fields' })
@@ -87,10 +59,6 @@ function createApp() {
     if (!trimmedName || trimmedName.length > 40 || trimmedNotes.length > 200) {
       return res.status(400).json({ error: 'Invalid student fields' })
     }
-    if (courseId && !courses.some(item => item.id === courseId && item.ownerOpenid === req.ownerOpenid)) {
-      return res.status(404).json({ error: 'Course not found' })
-    }
-
     const student = {
       id: randomUUID(),
       name: trimmedName,
@@ -104,15 +72,16 @@ function createApp() {
       createdAt: new Date().toISOString(),
       ownerOpenid: req.ownerOpenid
     }
-    students.unshift(student)
-    res.status(201).json(publicStudent(student))
+    res.status(201).json(await store.createStudent(student))
   })
 
-  app.get('/students/:studentId', requireWeChatUser, requireOwnedStudent, (req, res) => {
-    res.json({ student: publicStudent(req.student, true) })
+  app.get('/students/:studentId', requireWeChatUser, async (req, res) => {
+    const student = await store.getStudent(req.ownerOpenid, req.params.studentId, true)
+    if (!student) return res.status(404).json({ error: 'Student not found' })
+    res.json({ student })
   })
 
-  app.patch('/students/:studentId', requireWeChatUser, requireOwnedStudent, (req, res) => {
+  app.patch('/students/:studentId', requireWeChatUser, async (req, res) => {
     const { name, courseId = '', notes = '' } = req.body || {}
     if (typeof name !== 'string' || typeof courseId !== 'string' || typeof notes !== 'string') {
       return res.status(400).json({ error: 'Invalid student fields' })
@@ -122,16 +91,14 @@ function createApp() {
     if (!trimmedName || trimmedName.length > 40 || trimmedNotes.length > 300) {
       return res.status(400).json({ error: 'Invalid student fields' })
     }
-    if (courseId && !courses.some(item => item.id === courseId && item.ownerOpenid === req.ownerOpenid)) {
-      return res.status(404).json({ error: 'Course not found' })
-    }
-    req.student.name = trimmedName
-    req.student.courseId = courseId
-    req.student.notes = trimmedNotes
-    res.json({ student: publicStudent(req.student) })
+    const student = await store.updateStudent(req.ownerOpenid, req.params.studentId, {
+      name: trimmedName, courseId, notes: trimmedNotes
+    })
+    if (!student) return res.status(404).json({ error: 'Student not found' })
+    res.json({ student })
   })
 
-  app.post('/students/:studentId/credits', requireWeChatUser, requireOwnedStudent, (req, res) => {
+  app.post('/students/:studentId/credits', requireWeChatUser, async (req, res) => {
     const { amount, fee = 0, notes = '' } = req.body || {}
     const creditAmount = Number(amount)
     const creditFee = Number(fee)
@@ -139,9 +106,6 @@ function createApp() {
         !Number.isFinite(creditFee) || creditFee < 0 || typeof notes !== 'string' || notes.trim().length > 200) {
       return res.status(400).json({ error: 'Invalid credit fields' })
     }
-    const student = req.student
-    student.totalCredits += creditAmount
-    student.remainingCredits += creditAmount
     const record = {
       id: randomUUID(),
       time: new Date().toISOString(),
@@ -149,11 +113,12 @@ function createApp() {
       detail: creditFee ? `费用：¥${creditFee}` : '未填写费用',
       note: notes.trim()
     }
-    student.creditHistory.unshift(record)
-    res.status(201).json({ student: publicStudent(student, true), record })
+    const result = await store.addCredits(req.ownerOpenid, req.params.studentId, creditAmount, creditFee, record)
+    if (!result) return res.status(404).json({ error: 'Student not found' })
+    res.status(201).json(result)
   })
 
-  app.post('/students/:studentId/appointments', requireWeChatUser, requireOwnedStudent, (req, res) => {
+  app.post('/students/:studentId/appointments', requireWeChatUser, async (req, res) => {
     const { date, start, end, endDate = '', notes = '' } = req.body || {}
     const datePattern = /^\d{4}-\d{2}-\d{2}$/
     const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/
@@ -180,13 +145,10 @@ function createApp() {
       return res.status(400).json({ error: 'Invalid appointment time range' })
     }
 
-    const student = req.student
     const appointment = {
       id: randomUUID(), date, start, end, endDate: appointmentEndDate === date ? '' : appointmentEndDate,
       notes: notes.trim(), status: 'scheduled', createdAt: new Date().toISOString()
     }
-    student.appointments.push(appointment)
-    student.appointments.sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`))
     const record = {
       id: appointment.id,
       time: appointment.createdAt,
@@ -194,8 +156,9 @@ function createApp() {
       detail: `${date} ${start}–${appointmentEndDate === date ? end : `次日 ${end}`}`,
       note: notes.trim()
     }
-    student.appointmentHistory.unshift(record)
-    res.status(201).json({ student: publicStudent(student, true), appointment, record })
+    const result = await store.addAppointment(req.ownerOpenid, req.params.studentId, appointment, record)
+    if (!result) return res.status(404).json({ error: 'Student not found' })
+    res.status(201).json(result)
   })
 
   app.use((req, res) => {
@@ -206,6 +169,9 @@ function createApp() {
     if (error.type === 'entity.parse.failed') {
       return res.status(400).json({ error: 'Invalid JSON' })
     }
+    if (error.code === 'COURSE_NAME_EXISTS') return res.status(409).json({ error: 'Course name already exists' })
+    if (error.code === 'COURSE_NOT_FOUND') return res.status(404).json({ error: 'Course not found' })
+    if (error.code === 'STUDENT_NOT_FOUND') return res.status(404).json({ error: 'Student not found' })
     console.error('Request failed:', error)
     res.status(500).json({ error: 'Internal Server Error' })
   })
