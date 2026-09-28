@@ -5,10 +5,19 @@
     <button class="plain-button" bindtap="loadCourses">重试</button>
   </view>
   <view wx:elif="{{courses.length === 0}}" class="course-state">还没有课程，点击下方添加课程</view>
-  <view wx:for="{{courses}}" wx:for-item="course" wx:key="id" class="offering-card card">
+  <view wx:for="{{courses}}" wx:for-item="course" wx:key="id" class="offering-card card" data-id="{{course.id}}" bindtap="editCourse">
     <view class="offering-head"><text class="offering-name">{{course.name}}</text></view>
     <text class="offering-description {{course.description ? '' : 'empty-description'}}">{{course.description || '暂无课程介绍'}}</text>
-    <view class="offering-footer"><text>暂不支持编辑</text></view>
+    <view class="offering-footer" catchtap="openStudentSheet" data-id="{{course.id}}"><text class="action-link">{{course.studentCount}} 位学员 →</text></view>
   </view>
   <view class="add-class-card" bindtap="addClass"><image src="/assets/plus.svg" mode="aspectFit" /><text>添加课程</text></view>
 </view>
+<bottom-sheet visible="{{studentSheetOpen}}" title="{{selectedCourseName}} · 学员" bind:close="closeStudentSheet">
+  <view wx:if="{{selectedStudents.length}}" class="course-student-list">
+    <view wx:for="{{selectedStudents}}" wx:key="id" class="course-student-row">
+      <view class="course-student-avatar">{{item.initial}}</view>
+      <text class="course-student-name">{{item.name}}</text>
+    </view>
+  </view>
+  <view wx:else class="course-student-empty">暂时没有学员关联这门课程</view>
+</bottom-sheet>

@@ -1,41 +1,39 @@
 const { colors } = require('../../utils/design-tokens')
 const COLORS = colors.chart
+const { getRevenueReport } = require('../../utils/account-api')
 
 Page({
-  data: { totalText: '0', showClassBreakdown: false, classBreakdown: [], months: [] },
+  data: { totalText: '0', showClassBreakdown: false, classBreakdown: [], months: [], loading: false, error: '', period: '' },
 
   onReady() {
     this.chartReady = true
     this.drawClassPie()
   },
 
-  onShow() {
-    const { offerings, revenueRecords } = getApp().store
-    const total = revenueRecords.reduce((sum, record) => sum + record.amount, 0)
-    const classBreakdown = offerings.map((offering, index) => {
-      const amount = revenueRecords.filter(record => record.offeringId === offering.id).reduce((sum, record) => sum + record.amount, 0)
-      return { id: offering.id, name: offering.name, amount, amountText: amount.toLocaleString('zh-CN'), color: COLORS[index % COLORS.length], percent: total ? Math.round(amount / total * 100) : 0 }
-    }).filter(item => item.amount > 0)
-    const groupedMonths = {}
-    revenueRecords.forEach(record => {
-      const month = record.date.slice(0, 7)
-      groupedMonths[month] = (groupedMonths[month] || 0) + record.amount
+  onShow() { this.loadReport() },
+
+  loadReport() {
+    const requestId = (this.requestId || 0) + 1
+    this.requestId = requestId
+    this.setData({ loading: true, error: '' })
+    return getRevenueReport().then(report => {
+      if (requestId !== this.requestId) return
+      const total = report.total
+      const classBreakdown = report.classBreakdown.map((course, index) => ({ ...course,
+        amountText: course.amount.toLocaleString('zh-CN'), color: COLORS[index % COLORS.length],
+        percent: total ? Math.round(course.amount / total * 100) : 0 }))
+      const max = Math.max(1, ...report.months.map(month => month.amount))
+      const months = report.months.map(month => ({ ...month, label: `${Number(month.key.slice(5))}月`,
+        amountText: month.amount.toLocaleString('zh-CN'), height: Math.round(month.amount / max * 100),
+        labelBottom: Math.round(month.amount / max * 220 + 8) }))
+      this.setData({ totalText: total.toLocaleString('zh-CN'), showClassBreakdown: classBreakdown.length > 1,
+        classBreakdown, months, loading: false, period: `${report.startDate} 至 ${report.endDate}` },
+      () => { if (this.chartReady) this.drawClassPie() })
+    }).catch(error => {
+      if (requestId !== this.requestId) return
+      this.setData({ loading: false, error: error.statusCode === 401 ? '无法识别微信用户，请重试' : '收入报表加载失败，请重试',
+        totalText: '0', months: [], classBreakdown: [], showClassBreakdown: false })
     })
-    const max = Math.max(1, ...Object.values(groupedMonths))
-    const months = Object.keys(groupedMonths).sort().map(month => ({
-      key: month,
-      label: `${Number(month.slice(5))}月`,
-      amount: groupedMonths[month],
-      amountText: groupedMonths[month].toLocaleString('zh-CN'),
-      height: Math.max(4, Math.round(groupedMonths[month] / max * 100)),
-      labelBottom: Math.round(Math.max(4, groupedMonths[month] / max * 100) * 2.2 + 8)
-    }))
-    this.setData({
-      totalText: total.toLocaleString('zh-CN'),
-      showClassBreakdown: offerings.length > 1 && classBreakdown.length > 0,
-      classBreakdown,
-      months
-    }, () => { if (this.chartReady) this.drawClassPie() })
   },
 
   drawClassPie() {

@@ -2,11 +2,13 @@
   <view class="hero">
     <view class="hero-copy">
       <text class="hero-kicker">{{dateText}}</text>
-      <text class="hero-title">今天有 {{count}} 节课，祝一切顺利</text>
+      <text class="hero-title">{{loading ? '正在加载课程安排…' : error ? '课程安排暂时不可用' : count === 0 ? '今天没有课，祝你过得开心' : '今天有 ' + count + ' 节课，祝一切顺利'}}</text>
     </view>
     <image class="hero-logo" src="/rabbit-logo.png" mode="aspectFit" />
   </view>
 
+  <view wx:if="{{error}}" class="empty card"><text>{{error}}</text><button class="plain-button" bindtap="loadSessions">重试</button></view>
+  <block wx:if="{{!loading && !error}}">
   <view class="section-heading"><text class="section-title">今日课程</text></view>
   <view wx:if="{{today.length === 0}}" class="empty card">今天还没有课程安排</view>
   <view wx:for="{{today}}" wx:key="id" class="class-card card {{item.status === 'cancelled' ? 'cancelled' : ''}}" data-id="{{item.id}}" bindtap="openDetail">
@@ -25,5 +27,7 @@
     <view class="upcoming-info"><view class="class-top"><text class="class-name">{{item.studentNames}}</text><text wx:if="{{item.status !== 'scheduled'}}" class="status status-{{item.status}}">{{item.statusLabel}}</text></view><text class="upcoming-course">{{item.title}} · {{item.timeLabel}}</text></view>
     <text class="chevron">›</text>
   </view>
+  <view wx:if="{{upcoming.length === 0}}" class="empty card">暂时没有后续课程安排</view>
+  </block>
 </view>
 <tab-bar active="today" />

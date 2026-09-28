@@ -1,4 +1,6 @@
 .editor-page { padding-bottom:235rpx; }
+.editor-state { padding:42rpx 32rpx; text-align:center; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.editor-state button { margin:18rpx auto 0; }
 .editor-card { padding:8rpx 28rpx; }
 .editor-field { display:flex; align-items:center; gap:18rpx; min-height:100rpx; border-bottom:2rpx solid var(--color-border); }
 .editor-field:last-child { border-bottom:0; }
@@ -7,9 +9,8 @@
 .description-field { align-items:flex-start; padding:27rpx 0; }
 .editor-textarea { flex:1; height:235rpx; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; line-height:1.5; }
 .form-error { display:block; padding:10rpx 0 18rpx 134rpx; color:var(--color-status-cancelled); font-size:var(--font-size-small); }
-.editor-dock { position:fixed; left:0; right:0; bottom:0; z-index:10; padding:20rpx 32rpx calc(22rpx + env(safe-area-inset-bottom)); background:var(--color-surface); border-top:2rpx solid var(--color-border); }
-.editor-dock button { width:100%; margin:0; }
-.editor-dock .poster-button { margin-top:15rpx; }
+.editor-dock { position:fixed; left:0; right:0; bottom:0; z-index:10; display:flex; gap:18rpx; padding:20rpx 32rpx calc(22rpx + env(safe-area-inset-bottom)); background:var(--color-surface); border-top:2rpx solid var(--color-border); }
+.editor-dock button { flex:1; width:0; min-width:0; margin:0; }
 .poster-paper { min-height:470rpx; display:flex; flex-direction:column; box-sizing:border-box; padding:35rpx; border-radius:30rpx; background:var(--color-brand); color:var(--color-surface); }
 .poster-brand { display:flex; align-items:center; gap:12rpx; font-size:var(--font-size-small); font-weight:650; }
 .poster-brand image { width:62rpx; height:62rpx; }

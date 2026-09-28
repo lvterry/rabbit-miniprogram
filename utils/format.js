@@ -1,4 +1,4 @@
-const { todayKey, dateAfter } = require('./mock')
+const { todayKey, dateAfter } = require('./date')
 
 function shortDate(value) {
   const parts = value.split('-')
@@ -30,13 +30,10 @@ function viewClass(item) {
     timeLabel: `${item.start}–${item.endDate && item.endDate !== item.date ? `次日 ${item.end}` : item.end}`,
     statusLabel: item.status === 'cancelled' ? '已取消' : item.status === 'completed' ? '已完成' : '待上课',
     creditHintVisible: item.creditConsumed && item.status !== 'completed',
-    creditSummary: item.status === 'completed'
-      ? '本次已消耗 1 课时 ・ 剩余 19 次'
-      : item.status === 'cancelled'
-        ? item.creditConsumed
-          ? '本次已消耗 1 课时 ・ 剩余 20 次'
-          : '本次未消耗课时 ・ 剩余 20 次'
-        : '本次将消耗 1 课时 ・ 剩余 20 次'
+    creditSummary: (item.students || []).map(student => {
+      const consumed = student.creditConsumed ? '已消耗 1 课时' : item.status === 'cancelled' ? '未消耗课时' : '将消耗 1 课时'
+      return `${(item.students || []).length > 1 ? `${student.name}：` : ''}${consumed} ・ 剩余 ${student.remainingCredits} 次`
+    }).join('；')
   }
 }
 

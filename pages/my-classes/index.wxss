@@ -7,5 +7,11 @@
 .offering-description { display:block; margin-top:18rpx; color:var(--color-text-weak); font-size:var(--font-size-normal); line-height:1.55; }
 .empty-description { color:var(--color-text-weak); }
 .offering-footer { margin-top:24rpx; padding-top:20rpx; border-top:2rpx solid var(--color-border); color:var(--color-text-weak); font-size:var(--font-size-small); }
-.add-class-card { min-height:166rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8rpx; border:3rpx dashed var(--color-border); border-radius:30rpx; background:var(--color-surface-muted); color:var(--color-text-weak); font-size:var(--font-size-normal); font-weight:650; }
+.course-student-list { display:flex; flex-direction:column; }
+.course-student-row { display:flex; align-items:center; gap:18rpx; min-height:100rpx; border-bottom:2rpx solid var(--color-border); }
+.course-student-row:last-child { border-bottom:0; }
+.course-student-avatar { width:68rpx; height:68rpx; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:22rpx; background:var(--color-brand-soft); color:var(--color-brand); font-size:var(--font-size-normal); font-weight:700; }
+.course-student-name { flex:1; min-width:0; color:var(--color-text); font-size:var(--font-size-normal); font-weight:650; }
+.course-student-empty { padding:24rpx 0; color:var(--color-text-weak); text-align:center; font-size:var(--font-size-normal); }
+.add-class-card { min-height:166rpx; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8rpx; border:3rpx dashed var(--color-border); border-radius:30rpx; background:rgba(255,255,255,.8); color:var(--color-text-weak); font-size:var(--font-size-normal); font-weight:650; }
 .add-class-card image { width:36rpx; height:36rpx; padding:7rpx; border-radius:50%; background:var(--color-brand); }

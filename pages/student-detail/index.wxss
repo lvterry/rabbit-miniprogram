@@ -4,7 +4,6 @@
 .student-profile { padding:10rpx 30rpx; }
 .profile-title-row { display:flex; align-items:center; justify-content:space-between; padding:24rpx 0; }
 .profile-title { font-size:var(--font-size-h1); font-weight:750; }
-.edit-link { color:var(--color-brand); font-size:var(--font-size-small); font-weight:650; white-space:nowrap; }
 .profile-row { display:flex; align-items:center; gap:22rpx; padding:22rpx 0; border-top:2rpx solid var(--color-border); }
 .profile-label { width:100rpx; flex-shrink:0; color:var(--color-text-weak); font-size:var(--font-size-normal); }
 .profile-value { flex:1; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; line-height:1.5; }

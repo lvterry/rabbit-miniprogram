@@ -1,5 +1,8 @@
 <view class="page-shell reports-page">
-  <view class="total-card card"><text class="total-label">总收入</text><text class="total-value">¥ {{totalText}}</text><text class="total-caption">近六个月 · 模拟数据</text></view>
+  <view wx:if="{{loading}}" class="chart-empty">正在加载收入报表…</view>
+  <view wx:elif="{{error}}" class="chart-empty"><text>{{error}}</text><button class="plain-button" bindtap="loadReport">重试</button></view>
+  <block wx:else>
+  <view class="total-card card"><text class="total-label">近六个月收入</text><text class="total-value">¥ {{totalText}}</text><text class="total-caption">{{period}}</text></view>
 
   <view wx:if="{{showClassBreakdown}}" class="report-section">
     <view class="section-heading"><text class="section-title">按课程</text></view>
@@ -26,4 +29,5 @@
       </view>
     </view>
   </view>
+  </block>
 </view>

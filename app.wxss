@@ -51,3 +51,4 @@ button.plain-button {
 .primary-button { background: var(--color-brand); color: var(--color-surface); border-radius: 22rpx; font-size: var(--font-size-normal); font-weight: 650; height: 88rpx; }
 .secondary-button { background: var(--color-surface); color: var(--color-brand); border: 2rpx solid var(--color-border); border-radius: 22rpx; font-size: var(--font-size-normal); font-weight: 650; height: 88rpx; }
 .plain-button { background: transparent; color: var(--color-brand); font-size: var(--font-size-small); height: 72rpx; }
+.action-link { color:var(--color-brand); font-size:var(--font-size-small); font-weight:650; white-space:nowrap; }

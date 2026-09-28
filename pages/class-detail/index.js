@@ -1,5 +1,6 @@
-const { todayKey } = require('../../utils/mock')
+const { todayKey, displayTime } = require('../../utils/date')
 const { viewClass } = require('../../utils/format')
+const { getSession, changeSession } = require('../../utils/session-api')
 
 function timeMinutes(value) {
   const [hours, minutes] = value.split(':').map(Number)
@@ -34,7 +35,7 @@ function endAfterDuration(date, start, duration) {
 
 Page({
   data: {
-    item: null,
+    item: null, loading: false, loadError: '', saving: false,
     sheet: '',
     sheetTitle: '',
     draftDate: '',
@@ -51,16 +52,20 @@ Page({
   onShow() { this.refresh() },
 
   refresh() {
-    const item = getApp().getClass(this.classId)
-    if (!item) {
-      wx.showToast({ title: '找不到这节课', icon: 'none' })
-      setTimeout(() => wx.navigateBack(), 1000)
-      return
-    }
-    this.setData({ item: viewClass(item), minDate: todayKey() })
+    const requestId = (this.requestId || 0) + 1
+    this.requestId = requestId
+    this.setData({ loading: true, loadError: '' })
+    return getSession(this.classId).then(item => {
+      if (requestId !== this.requestId) return
+      this.setData({ item: viewClass({ ...item, history: item.history.map(event => ({ ...event, time: displayTime(event.time) })) }), minDate: todayKey(), loading: false })
+    }).catch(error => {
+      if (requestId !== this.requestId) return
+      this.setData({ item: null, loading: false, loadError: error.statusCode === 404 ? '找不到这节课' : '课程加载失败，请重试' })
+    })
   },
 
   openSheet(event) {
+    if (this.data.saving || !this.data.item) return
     const sheet = event.currentTarget.dataset.sheet
     const item = this.data.item
     const titles = { reschedule: '课程改期', cancel: '取消课程', complete: '标记完成', restore: '恢复课程', uncomplete: '撤销完成', editNote: '编辑备注' }
@@ -85,7 +90,7 @@ Page({
     wx.navigateTo({ url: `/pages/student-detail/index?id=${studentIds[0]}` })
   },
 
-  closeSheet() { this.setData({ sheet: '' }) },
+  closeSheet() { if (!this.data.saving) this.setData({ sheet: '' }) },
   onDateChange(event) {
     const date = event.detail.value
     const end = endAfterDuration(date, this.data.draftStart, this.data.draftDuration)
@@ -100,14 +105,19 @@ Page({
   onNoteInput(event) { this.setData({ draftNote: event.detail.value }) },
 
   apply(action, payload) {
-    const changed = getApp().changeClass(this.classId, action, payload)
-    if (!changed) {
-      wx.showToast({ title: '操作未完成，请检查填写内容', icon: 'none' })
-      return
-    }
-    this.setData({ sheet: '' })
-    this.refresh()
-    wx.showToast({ title: '已更新课程', icon: 'success' })
+    if (this.data.saving || !this.data.item) return
+    this.requestId = (this.requestId || 0) + 1
+    this.setData({ saving: true, loading: false })
+    return changeSession(this.classId, { action, version: this.data.item.version, ...payload }).then(item => {
+      this.setData({ sheet: '', saving: false, item: viewClass({ ...item, history: item.history.map(event => ({ ...event, time: displayTime(event.time) })) }) })
+      wx.showToast({ title: '已更新课程', icon: 'success' })
+    }).catch(error => {
+      this.setData({ saving: false })
+      const title = error.code === 'INSUFFICIENT_CREDITS' ? '课时不足，请先添加课时'
+        : error.code === 'SESSION_CONFLICT' ? '课程已被更新，请重新操作' : '操作未完成，请检查内容或重试'
+      wx.showToast({ title, icon: 'none' })
+      if (error.code === 'SESSION_CONFLICT') { this.setData({ sheet: '' }); return this.refresh() }
+    })
   },
 
   confirmReschedule() {

@@ -6,5 +6,6 @@
 <bottom-sheet visible="{{feedbackOpen}}" title="意见反馈" bind:close="closeFeedback">
     <text class="input-label">告诉我们你的想法</text>
     <textarea class="feedback-textarea" value="{{feedbackText}}" bindinput="onFeedbackInput" placeholder="使用过程中遇到的问题或建议" maxlength="500" />
-    <button class="primary-button submit-button" bindtap="submitFeedback">提交反馈</button>
+    <text wx:if="{{error}}" class="feedback-error">{{error}}</text>
+    <button loading="{{saving}}" disabled="{{saving}}" class="primary-button submit-button" bindtap="submitFeedback">提交反馈</button>
 </bottom-sheet>

@@ -1,4 +1,4 @@
-const { requestCloudApi } = require('./cloud-api')
+const { requestCloudApi, mutateCloudApi } = require('./cloud-api')
 
 function listStudents() {
   return requestCloudApi({ path: '/students', method: 'GET' }).then(data => {
@@ -24,12 +24,12 @@ function updateStudent(id, fields) {
 }
 
 function addStudentCredits(id, fields) {
-  return requestCloudApi({ path: `/students/${encodeURIComponent(id)}/credits`, method: 'POST', data: fields })
+  return mutateCloudApi(`credits:${id}`, { path: `/students/${encodeURIComponent(id)}/credits`, method: 'POST', data: fields })
     .then(data => data.student)
 }
 
 function addStudentAppointment(id, fields) {
-  return requestCloudApi({ path: `/students/${encodeURIComponent(id)}/appointments`, method: 'POST', data: fields })
+  return mutateCloudApi(`appointments:${id}`, { path: `/students/${encodeURIComponent(id)}/appointments`, method: 'POST', data: fields })
     .then(data => data.student)
 }
 

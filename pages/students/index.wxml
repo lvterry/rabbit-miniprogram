@@ -37,6 +37,6 @@
       <button wx:if="{{!coursesLoading && !coursesError && courses.length === 0}}" class="plain-button add-course-link" bindtap="goAddCourse">还没有课程？先添加课程</button>
       <text class="input-label field-gap">备注（选填）</text><textarea class="sheet-textarea" placeholder="添加学员备注" value="{{newNotes}}" maxlength="200" bindinput="onNotesInput" />
       <text wx:if="{{formError}}" class="form-error">{{formError}}</text>
-      <button class="primary-button sheet-primary" loading="{{saving}}" disabled="{{saving}}" bindtap="createStudent">创建学员</button>
+      <button class="primary-button sheet-primary create-student-button" loading="{{saving}}" disabled="{{saving}}" bindtap="createStudent">创建学员</button>
     </view>
 </bottom-sheet>

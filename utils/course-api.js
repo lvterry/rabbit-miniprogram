@@ -11,4 +11,22 @@ function listCourses() {
   })
 }
 
-module.exports = { createCourse, listCourses }
+function getCourse(id) {
+  return requestCloudApi({ path: `/courses/${encodeURIComponent(id)}`, method: 'GET' }).then(data => {
+    if (!data || !data.course) throw new Error('Invalid course response')
+    return data.course
+  })
+}
+
+function updateCourse(id, { name, description }) {
+  return requestCloudApi({
+    path: `/courses/${encodeURIComponent(id)}`,
+    method: 'PATCH',
+    data: { name, description }
+  }).then(data => {
+    if (!data || !data.course) throw new Error('Invalid course response')
+    return data.course
+  })
+}
+
+module.exports = { createCourse, listCourses, getCourse, updateCourse }

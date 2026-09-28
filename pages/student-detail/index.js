@@ -1,13 +1,6 @@
-const { todayKey } = require('../../utils/mock')
-const { viewClass, relativeDate } = require('../../utils/format')
+const { todayKey, displayTime } = require('../../utils/date')
+const { relativeDate } = require('../../utils/format')
 const { getStudent, addStudentCredits, addStudentAppointment } = require('../../utils/student-api')
-
-function displayTime(value) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const pad = number => String(number).padStart(2, '0')
-  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
 
 function formatCloudStudent(student) {
   const courseName = student.courseName || ''
@@ -17,7 +10,7 @@ function formatCloudStudent(student) {
     .slice(0, 1)
     .map(item => ({
       ...item,
-      title: courseName || '未关联课程',
+      title: item.title || courseName || '未关联课程',
       dateLabel: relativeDate(item.date),
       timeLabel: `${item.start}–${item.endDate ? `次日 ${item.end}` : item.end}`
     }))
@@ -47,10 +40,20 @@ function isEndNextDay(start, end) {
   return minutes(end) < minutes(start)
 }
 
+function addMinutes(time, amount) {
+  const [hour, minute] = time.split(':').map(Number)
+  const totalMinutes = hour * 60 + minute + amount
+  const endMinutes = totalMinutes % (24 * 60)
+  const pad = value => String(value).padStart(2, '0')
+  return {
+    time: `${pad(Math.floor(endMinutes / 60))}:${pad(endMinutes % 60)}`,
+    isNextDay: totalMinutes >= 24 * 60
+  }
+}
+
 Page({
   data: {
     student: null,
-    source: '',
     loading: false,
     loadError: '',
     upcoming: [],
@@ -74,24 +77,9 @@ Page({
   onShow() { this.refresh() },
 
   refresh() {
-    const app = getApp()
-    const localStudent = app.getStudent(this.studentId)
-    if (localStudent) {
-      const upcoming = app.store.classes
-        .filter(item => item.studentIds.includes(localStudent.id) && item.status === 'scheduled' && item.date >= todayKey())
-        .sort((a, b) => `${a.date} ${a.start}`.localeCompare(`${b.date} ${b.start}`))
-        .slice(0, 1)
-        .map(viewClass)
-      this.setData({
-        source: 'local', student: localStudent, upcoming,
-        creditProgress: localStudent.totalCredits ? Math.min(100, localStudent.remainingCredits / localStudent.totalCredits * 100) : 0,
-        minDate: todayKey(), loading: false, loadError: ''
-      })
-      return Promise.resolve(localStudent)
-    }
     const requestId = (this.studentRequestId || 0) + 1
     this.studentRequestId = requestId
-    this.setData({ source: 'cloud', loading: true, loadError: '' })
+    this.setData({ loading: true, loadError: '' })
     return getStudent(this.studentId)
       .then(student => {
         if (requestId !== this.studentRequestId) return
@@ -105,8 +93,7 @@ Page({
       .catch(error => {
         if (requestId !== this.studentRequestId) return
         if (error.statusCode === 404) {
-          wx.showToast({ title: '找不到这位学员', icon: 'none' })
-          setTimeout(() => wx.navigateBack(), 1000)
+          this.setData({ student: null, loading: false, loadError: '找不到这位学员' })
         } else {
           this.setData({ student: null, loading: false, loadError: '云端学员加载失败，请重试' })
         }
@@ -118,11 +105,11 @@ Page({
   },
 
   openClass(event) {
-    if (this.data.source !== 'local') return
     wx.navigateTo({ url: `/pages/class-detail/index?id=${event.currentTarget.dataset.id}` })
   },
 
   openSheet(event) {
+    if (this.data.savingAction || !this.data.student) return
     const sheet = event.currentTarget.dataset.sheet
     const student = this.data.student
     const titles = { credits: '添加课时', appointment: '添加预约', creditHistory: '课时记录', appointmentHistory: '预约记录' }
@@ -156,9 +143,11 @@ Page({
   onAppointmentNotes(event) { this.setData({ appointmentNotes: event.detail.value }) },
   onAppointmentDate(event) { this.setData({ appointmentDate: event.detail.value }) },
   onAppointmentStart(event) {
+    const appointmentEnd = addMinutes(event.detail.value, 60)
     this.setData({
       appointmentStart: event.detail.value,
-      appointmentEndIsNextDay: isEndNextDay(event.detail.value, this.data.appointmentEnd)
+      appointmentEnd: appointmentEnd.time,
+      appointmentEndIsNextDay: appointmentEnd.isNextDay
     })
   },
   onAppointmentEnd(event) {
@@ -170,35 +159,21 @@ Page({
 
   confirmCredits() {
     if (this.data.savingAction) return
-    if (this.data.source === 'cloud') {
-      this.setData({ savingAction: true })
-      return addStudentCredits(this.studentId, {
-        amount: this.data.creditAmount,
-        fee: this.data.fee,
-        notes: this.data.creditNotes
-      })
-        .then(() => {
-          this.setData({ sheet: '', savingAction: false })
-          wx.showToast({ title: '课时已添加', icon: 'success' })
-          return this.refresh()
-        })
-        .catch(error => {
-          this.setData({ savingAction: false })
-          wx.showToast({ title: error.statusCode === 404 ? '找不到这位学员' : '课时添加失败，请检查数量和费用', icon: 'none' })
-        })
-    }
-    const ok = getApp().changeStudent(this.studentId, 'addCredits', {
+    this.setData({ savingAction: true })
+    return addStudentCredits(this.studentId, {
       amount: this.data.creditAmount,
       fee: this.data.fee,
       notes: this.data.creditNotes
     })
-    if (!ok) {
-      wx.showToast({ title: '请输入有效的课时数量和费用', icon: 'none' })
-      return
-    }
-    this.setData({ sheet: '' })
-    this.refresh()
-    wx.showToast({ title: '课时已添加', icon: 'success' })
+      .then(() => {
+        this.setData({ sheet: '', savingAction: false })
+        wx.showToast({ title: '课时已添加', icon: 'success' })
+        return this.refresh()
+      })
+      .catch(error => {
+        this.setData({ savingAction: false })
+        wx.showToast({ title: error.statusCode === 404 ? '找不到这位学员' : '课时添加失败，请检查数量和费用', icon: 'none' })
+      })
   },
 
   confirmAppointment() {
@@ -215,27 +190,17 @@ Page({
       endDate,
       notes: this.data.appointmentNotes
     }
-    if (this.data.source === 'cloud') {
-      this.setData({ savingAction: true })
-      return addStudentAppointment(this.studentId, payload)
-        .then(() => {
-          this.setData({ sheet: '', savingAction: false })
-          wx.showToast({ title: '预约已添加', icon: 'success' })
-          return this.refresh()
-        })
-        .catch(error => {
-          this.setData({ savingAction: false })
-          const title = error.statusCode === 404 ? '找不到这位学员' : '预约未添加，请检查日期和时间'
-          wx.showToast({ title, icon: 'none' })
-        })
-    }
-    const ok = getApp().changeStudent(this.studentId, 'addAppointment', payload)
-    if (!ok) {
-      wx.showToast({ title: '预约未添加，请检查日期和时间', icon: 'none' })
-      return
-    }
-    this.setData({ sheet: '' })
-    this.refresh()
-    wx.showToast({ title: '预约已添加', icon: 'success' })
+    this.setData({ savingAction: true })
+    return addStudentAppointment(this.studentId, payload)
+      .then(() => {
+        this.setData({ sheet: '', savingAction: false })
+        wx.showToast({ title: '预约已添加', icon: 'success' })
+        return this.refresh()
+      })
+      .catch(error => {
+        this.setData({ savingAction: false })
+        const title = error.code === 'COURSE_REQUIRED' ? '请先编辑学员并关联课程' : error.statusCode === 404 ? '学员或课程不存在' : '预约未添加，请检查日期和时间'
+        wx.showToast({ title, icon: 'none' })
+      })
   }
 })
