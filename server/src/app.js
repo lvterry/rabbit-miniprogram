@@ -1,6 +1,7 @@
 const { randomUUID } = require('node:crypto')
 const express = require('express')
 const { createMemoryStore } = require('./memory-store')
+const { businessDate, validRange, operationKey } = require('./domain')
 
 function createApp({ store = createMemoryStore() } = {}) {
   const app = express()
@@ -19,6 +20,77 @@ function createApp({ store = createMemoryStore() } = {}) {
     req.ownerOpenid = openid
     next()
   }
+
+  function optionalRequestKey(req, res, next) {
+    const { requestId } = req.body || {}
+    if (requestId !== undefined && !operationKey(requestId)) return res.status(400).json({ error: 'Invalid request key' })
+    next()
+  }
+
+  function requireRequestKey(req, res, next) {
+    if (!operationKey((req.body || {}).requestId)) return res.status(400).json({ error: 'Request key required' })
+    next()
+  }
+
+  app.get('/me', requireWeChatUser, async (req, res) => {
+    res.json({ profile: await store.getProfile(req.ownerOpenid) })
+  })
+
+  app.patch('/me', requireWeChatUser, async (req, res) => {
+    const { name } = req.body || {}
+    if (typeof name !== 'string' || !name.trim() || name.trim().length > 40) return res.status(400).json({ error: 'Invalid profile fields' })
+    res.json({ profile: await store.updateProfile(req.ownerOpenid, name.trim()) })
+  })
+
+  app.post('/feedback', requireWeChatUser, requireRequestKey, async (req, res) => {
+    const { message, requestId } = req.body
+    if (typeof message !== 'string' || !message.trim() || message.trim().length > 500) return res.status(400).json({ error: 'Invalid feedback fields' })
+    res.status(201).json(await store.addFeedback(req.ownerOpenid, message.trim(), requestId))
+  })
+
+  app.get('/reports/revenue', requireWeChatUser, async (req, res) => {
+    res.json({ report: await store.getFinancialReport(req.ownerOpenid) })
+  })
+
+  app.get('/sessions', requireWeChatUser, async (req, res) => {
+    const from = req.query.from || businessDate()
+    const to = req.query.to || '9999-12-31'
+    const validDate = value => validRange({ date: value, start: '00:00', end: '00:01' }, { future: false })
+    if (!validDate(from) || !validDate(to) || from > to) return res.status(400).json({ error: 'Invalid date range' })
+    res.json({ sessions: await store.listSessions(req.ownerOpenid, from, to) })
+  })
+
+  app.get('/sessions/:sessionId', requireWeChatUser, async (req, res) => {
+    const session = await store.getSession(req.ownerOpenid, req.params.sessionId)
+    if (!session) return res.status(404).json({ error: 'Session not found' })
+    res.json({ session })
+  })
+
+  app.post('/sessions', requireWeChatUser, requireRequestKey, async (req, res) => {
+    const { courseId, studentIds, date, start, end, endDate = '', notes = '', requestId } = req.body
+    if (typeof courseId !== 'string' || !courseId || !Array.isArray(studentIds) || !studentIds.length || studentIds.length > 100 ||
+        studentIds.some(id => typeof id !== 'string' || !id) || new Set(studentIds).size !== studentIds.length ||
+        !validRange({ date, start, end, endDate }) || typeof notes !== 'string' || notes.trim().length > 200) {
+      return res.status(400).json({ error: 'Invalid session fields' })
+    }
+    res.status(201).json(await store.createSession(req.ownerOpenid, { courseId, studentIds, date, start, end, endDate: endDate === date ? '' : endDate, notes: notes.trim() }, requestId))
+  })
+
+  app.post('/sessions/:sessionId/actions', requireWeChatUser, requireRequestKey, async (req, res) => {
+    const { action, version, consumeCredit = false, actionNote = '', note = '', requestId } = req.body
+    if (!['reschedule', 'cancel', 'restore', 'complete', 'uncomplete', 'editNote'].includes(action) ||
+        !Number.isSafeInteger(version) || version < 0 || typeof consumeCredit !== 'boolean' ||
+        typeof actionNote !== 'string' || actionNote.trim().length > 200 || typeof note !== 'string' || note.trim().length > 200) {
+      return res.status(400).json({ error: 'Invalid session action' })
+    }
+    const fields = { action, version, consumeCredit, actionNote: actionNote.trim(), note: note.trim() }
+    if (action === 'reschedule') {
+      const { date, start, end, endDate = '' } = req.body
+      if (!validRange({ date, start, end, endDate })) return res.status(400).json({ error: 'Invalid appointment fields' })
+      Object.assign(fields, { date, start, end, endDate: endDate === date ? '' : endDate })
+    }
+    res.json(await store.changeSession(req.ownerOpenid, req.params.sessionId, fields, requestId))
+  })
 
   app.get('/courses', requireWeChatUser, async (req, res) => {
     res.json({ courses: await store.listCourses(req.ownerOpenid) })
@@ -121,12 +193,12 @@ function createApp({ store = createMemoryStore() } = {}) {
     res.json({ student })
   })
 
-  app.post('/students/:studentId/credits', requireWeChatUser, async (req, res) => {
+  app.post('/students/:studentId/credits', requireWeChatUser, optionalRequestKey, async (req, res) => {
     const { amount, fee = 0, notes = '' } = req.body || {}
     const creditAmount = Number(amount)
     const creditFee = Number(fee)
     if (!Number.isInteger(creditAmount) || creditAmount < 1 || creditAmount > 1000 ||
-        !Number.isFinite(creditFee) || creditFee < 0 || typeof notes !== 'string' || notes.trim().length > 200) {
+        !Number.isFinite(creditFee) || creditFee < 0 || creditFee > 99999999.99 || Math.abs(creditFee * 100 - Math.round(creditFee * 100)) > 0.000001 || typeof notes !== 'string' || notes.trim().length > 200) {
       return res.status(400).json({ error: 'Invalid credit fields' })
     }
     const record = {
@@ -136,38 +208,17 @@ function createApp({ store = createMemoryStore() } = {}) {
       detail: creditFee ? `费用：¥${creditFee}` : '未填写费用',
       note: notes.trim()
     }
-    const result = await store.addCredits(req.ownerOpenid, req.params.studentId, creditAmount, creditFee, record)
+    const result = await store.addCredits(req.ownerOpenid, req.params.studentId, creditAmount, creditFee, record, req.body.requestId)
     if (!result) return res.status(404).json({ error: 'Student not found' })
     res.status(201).json(result)
   })
 
-  app.post('/students/:studentId/appointments', requireWeChatUser, async (req, res) => {
+  app.post('/students/:studentId/appointments', requireWeChatUser, optionalRequestKey, async (req, res) => {
     const { date, start, end, endDate = '', notes = '' } = req.body || {}
-    const datePattern = /^\d{4}-\d{2}-\d{2}$/
-    const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/
-    if (typeof date !== 'string' || !datePattern.test(date) || typeof start !== 'string' || !timePattern.test(start) ||
-        typeof end !== 'string' || !timePattern.test(end) || typeof endDate !== 'string' ||
-        (endDate && !datePattern.test(endDate)) || typeof notes !== 'string' || notes.trim().length > 200) {
+    if (!validRange({ date, start, end, endDate }) || typeof notes !== 'string' || notes.trim().length > 200) {
       return res.status(400).json({ error: 'Invalid appointment fields' })
     }
     const appointmentEndDate = endDate || date
-    const isValidDate = value => {
-      const [year, month, day] = value.split('-').map(Number)
-      const parsed = new Date(Date.UTC(year, month - 1, day))
-      return parsed.toISOString().slice(0, 10) === value
-    }
-    if (!isValidDate(date) || !isValidDate(appointmentEndDate)) {
-      return res.status(400).json({ error: 'Invalid appointment date' })
-    }
-    const startMinutes = Number(start.slice(0, 2)) * 60 + Number(start.slice(3))
-    const endMinutes = Number(end.slice(0, 2)) * 60 + Number(end.slice(3))
-    const toUtcDay = value => Date.UTC(...value.split('-').map((part, index) => Number(part) - (index === 1 ? 1 : 0)))
-    const dayDifference = (toUtcDay(appointmentEndDate) - toUtcDay(date)) / 86400000
-    const duration = dayDifference * 1440 + endMinutes - startMinutes
-    if (dayDifference < 0 || dayDifference > 1 || duration <= 0 || duration > 1440) {
-      return res.status(400).json({ error: 'Invalid appointment time range' })
-    }
-
     const appointment = {
       id: randomUUID(), date, start, end, endDate: appointmentEndDate === date ? '' : appointmentEndDate,
       notes: notes.trim(), status: 'scheduled', createdAt: new Date().toISOString()
@@ -179,7 +230,7 @@ function createApp({ store = createMemoryStore() } = {}) {
       detail: `${date} ${start}–${appointmentEndDate === date ? end : `次日 ${end}`}`,
       note: notes.trim()
     }
-    const result = await store.addAppointment(req.ownerOpenid, req.params.studentId, appointment, record)
+    const result = await store.addAppointment(req.ownerOpenid, req.params.studentId, appointment, record, req.body.requestId)
     if (!result) return res.status(404).json({ error: 'Student not found' })
     res.status(201).json(result)
   })
@@ -195,6 +246,9 @@ function createApp({ store = createMemoryStore() } = {}) {
     if (error.code === 'COURSE_NAME_EXISTS') return res.status(409).json({ error: 'Course name already exists' })
     if (error.code === 'COURSE_NOT_FOUND') return res.status(404).json({ error: 'Course not found' })
     if (error.code === 'STUDENT_NOT_FOUND') return res.status(404).json({ error: 'Student not found' })
+    const statusByCode = { SESSION_NOT_FOUND: 404, SESSION_CONFLICT: 409, IDEMPOTENCY_CONFLICT: 409,
+      INSUFFICIENT_CREDITS: 409, COURSE_REQUIRED: 400, ENROLLMENT_REQUIRED: 400, INVALID_RANGE: 400 }
+    if (statusByCode[error.code]) return res.status(statusByCode[error.code]).json({ error: error.message, code: error.code })
     console.error('Request failed:', error)
     res.status(500).json({ error: 'Internal Server Error' })
   })

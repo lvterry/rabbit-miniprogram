@@ -1,7 +1,10 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { createMysqlBusinessStore } = require('./mysql-business-store')
+const { migrateCloudData } = require('./migrations')
 
 function createMysqlStore(pool) {
+  const business = createMysqlBusinessStore(pool)
   function storeError(code, message) {
     const error = new Error(message)
     error.code = code
@@ -30,8 +33,8 @@ function createMysqlStore(pool) {
     return student
   }
 
-  async function findStudentRow(ownerOpenid, studentId) {
-    const [rows] = await pool.execute(
+  async function findStudentRow(ownerOpenid, studentId, runner = pool) {
+    const [rows] = await runner.execute(
       `SELECT s.id, s.owner_openid AS ownerOpenid, s.course_id AS courseId,
               s.name, s.notes, s.total_credits AS totalCredits,
               s.remaining_credits AS remainingCredits,
@@ -52,12 +55,14 @@ function createMysqlStore(pool) {
   }
 
   return {
+    ...business,
     async initialize() {
       const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
       for (const statement of schema.split(';').map(item => item.trim()).filter(Boolean)) {
         await pool.query(statement)
       }
       await pool.query('SELECT 1')
+      await migrateCloudData(pool)
     },
 
     close() { return pool.end() },
@@ -138,49 +143,12 @@ function createMysqlStore(pool) {
     },
 
     async getStudent(ownerOpenid, studentId, includeDetails = true) {
-      const row = await findStudentRow(ownerOpenid, studentId)
-      if (!row) return null
-      if (!includeDetails) return mapStudent(row)
-
-      const [creditRows] = await pool.execute(
-        `SELECT id, amount, fee, notes,
-                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS time
-           FROM student_credits WHERE owner_openid = ? AND student_id = ?
-          ORDER BY created_at DESC, id DESC`,
-        [ownerOpenid, studentId]
-      )
-      const creditHistory = creditRows.map(record => ({
-        id: record.id,
-        time: record.time,
-        title: `添加 ${Number(record.amount)} 次课时`,
-        detail: Number(record.fee) ? `费用：¥${Number(record.fee)}` : '未填写费用',
-        note: record.notes
-      }))
-
-      const [appointmentRows] = await pool.execute(
-        `SELECT id,
-                DATE_FORMAT(appointment_date, '%Y-%m-%d') AS date,
-                DATE_FORMAT(start_time, '%H:%i') AS start,
-                IFNULL(DATE_FORMAT(end_date, '%Y-%m-%d'), '') AS endDate,
-                DATE_FORMAT(end_time, '%H:%i') AS end,
-                notes, status,
-                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt
-           FROM student_appointments WHERE owner_openid = ? AND student_id = ?
-          ORDER BY appointment_date, start_time, id`,
-        [ownerOpenid, studentId]
-      )
-      const appointments = appointmentRows.map(record => ({ ...record }))
-      const appointmentHistory = [...appointmentRows]
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .map(record => ({
-          id: record.id,
-          time: record.createdAt,
-          title: '添加预约',
-          detail: `${record.date} ${record.start}–${record.endDate ? `次日 ${record.end}` : record.end}`,
-          note: record.notes
-        }))
-
-      return mapStudent(row, { creditHistory, appointments, appointmentHistory })
+      return business.transaction(async connection => {
+        const row = await findStudentRow(ownerOpenid, studentId, connection)
+        if (!row) return null
+        if (!includeDetails) return mapStudent(row)
+        return mapStudent(row, await business.studentDetails(ownerOpenid, studentId, connection))
+      })
     },
 
     async updateStudent(ownerOpenid, studentId, fields) {
@@ -195,59 +163,34 @@ function createMysqlStore(pool) {
       return this.getStudent(ownerOpenid, studentId, false)
     },
 
-    async addCredits(ownerOpenid, studentId, amount, fee, record) {
-      const connection = await pool.getConnection()
-      try {
-        await connection.beginTransaction()
+    async addCredits(ownerOpenid, studentId, amount, fee, record, requestId) {
+      return business.mutate(ownerOpenid, requestId, `credits:${studentId}`, { amount, fee, notes: record.note }, async connection => {
         const [rows] = await connection.execute(
-          'SELECT id FROM students WHERE id = ? AND owner_openid = ? FOR UPDATE',
-          [studentId, ownerOpenid]
-        )
+          'SELECT id, course_id AS courseId FROM students WHERE id = ? AND owner_openid = ? FOR UPDATE', [studentId, ownerOpenid])
         if (!rows.length) throw storeError('STUDENT_NOT_FOUND', 'Student not found')
         await connection.execute(
           'UPDATE students SET total_credits = total_credits + ?, remaining_credits = remaining_credits + ? WHERE id = ? AND owner_openid = ?',
-          [amount, amount, studentId, ownerOpenid]
-        )
-        await connection.execute(
-          `INSERT INTO student_credits (id, owner_openid, student_id, amount, fee, notes, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [record.id, ownerOpenid, studentId, amount, fee, record.note, sqlDateTime(record.time)]
-        )
-        await connection.commit()
-      } catch (error) {
-        await connection.rollback().catch(() => {})
-        throw error
-      } finally {
-        connection.release()
-      }
-      return { student: await this.getStudent(ownerOpenid, studentId, true), record }
+          [amount, amount, studentId, ownerOpenid])
+        await connection.execute(`INSERT INTO student_credits (id, owner_openid, student_id, amount, fee, notes, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`, [record.id, ownerOpenid, studentId, amount, fee, record.note, sqlDateTime(record.time)])
+        await connection.execute(`INSERT INTO credit_ledger (id, owner_openid, student_id, delta, kind, title, notes, created_at)
+          VALUES (?, ?, ?, ?, 'grant', ?, ?, ?)`, [record.id, ownerOpenid, studentId, amount, record.title, record.note, sqlDateTime(record.time)])
+        if (fee > 0) {
+          const [courses] = await connection.execute('SELECT name FROM courses WHERE id = ? AND owner_openid = ?', [rows[0].courseId || '', ownerOpenid])
+          await connection.execute(`INSERT INTO payments (id, owner_openid, student_id, grant_id, course_id, course_name, amount, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [record.id, ownerOpenid, studentId, record.id, rows[0].courseId, courses[0] ? courses[0].name : '', fee, sqlDateTime(record.time)])
+        }
+        // Return the committed operation identity; details are loaded after the transaction.
+        return { record }
+      }).then(async result => ({ ...result, student: await this.getStudent(ownerOpenid, studentId, true) }))
     },
 
-    async addAppointment(ownerOpenid, studentId, appointment, record) {
-      const connection = await pool.getConnection()
-      try {
-        await connection.beginTransaction()
-        const [rows] = await connection.execute(
-          'SELECT id FROM students WHERE id = ? AND owner_openid = ? FOR UPDATE',
-          [studentId, ownerOpenid]
-        )
-        if (!rows.length) throw storeError('STUDENT_NOT_FOUND', 'Student not found')
-        await connection.execute(
-          `INSERT INTO student_appointments
-            (id, owner_openid, student_id, appointment_date, start_time, end_date, end_time, notes, status, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [appointment.id, ownerOpenid, studentId, appointment.date, `${appointment.start}:00`,
-            appointment.endDate || null, `${appointment.end}:00`, appointment.notes, appointment.status,
-            sqlDateTime(appointment.createdAt)]
-        )
-        await connection.commit()
-      } catch (error) {
-        await connection.rollback().catch(() => {})
-        throw error
-      } finally {
-        connection.release()
-      }
-      return { student: await this.getStudent(ownerOpenid, studentId, true), appointment, record }
+    async addAppointment(ownerOpenid, studentId, appointment, record, requestId) {
+      const { session } = await business.createSession(ownerOpenid, {
+        date: appointment.date, start: appointment.start, end: appointment.end,
+        endDate: appointment.endDate, notes: appointment.notes
+      }, requestId, studentId)
+      return { student: await this.getStudent(ownerOpenid, studentId, true), appointment: session, record: session.history[0] }
     }
   }
 }
