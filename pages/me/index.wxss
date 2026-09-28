@@ -1,4 +1,7 @@
-.account-card { display:flex; align-items:center; min-height:142rpx; padding:27rpx; box-sizing:border-box; }
+.account-card { display:flex; align-items:center; width:100%; min-height:142rpx; padding:27rpx; box-sizing:border-box; }
+/* Override the fixed button width in WeChat's v2 default styles. */
+button.account-card.account-login { display:flex; width:100%; margin:0; padding:27rpx; box-sizing:border-box; text-align:left; line-height:1.4; background:var(--color-surface); }
+button.account-card.account-login[disabled] { background:var(--color-surface); }
 .account-avatar { width:86rpx; height:86rpx; flex-shrink:0; display:flex; align-items:center; justify-content:center; border-radius:50%; margin-right:23rpx; }
 .guest-avatar { background:var(--color-brand-soft); }
 .guest-avatar image { width:52rpx; height:52rpx; }
@@ -8,6 +11,7 @@
 .account-description { font-size:var(--font-size-small); color:var(--color-text-weak); }
 .menu-chevron { color:var(--color-text-weak); font-size:var(--font-size-h1); line-height:1; }
 .menu-card { margin-top:28rpx; padding:0 27rpx; }
+.menu-card-first { margin-top:0; }
 .menu-row { display:flex; align-items:center; justify-content:space-between; min-height:104rpx; font-size:var(--font-size-normal); font-weight:600; color:var(--color-text); }
 .menu-row + .menu-row { border-top:2rpx solid var(--color-border); }
 .logout-wrap { margin-top:30rpx; text-align:center; }

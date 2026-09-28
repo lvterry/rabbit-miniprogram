@@ -1,12 +1,14 @@
 <view class="page-shell">
-  <view wx:if="{{loading}}" class="account-card card">正在加载账号资料…</view>
-  <view wx:elif="{{error}}" class="account-card card"><view class="account-copy"><text>{{error}}</text><button class="plain-button" bindtap="loadProfile">重试</button></view></view>
-  <view wx:elif="{{profile}}" class="account-card card" bindtap="editProfile">
-    <view class="account-avatar logged-avatar">{{initial}}</view>
-    <view class="account-copy"><text class="account-name">{{profile.name}}</text><text class="account-description">绑定微信头像和昵称</text></view>
-    <text class="menu-chevron">›</text>
-  </view>
-  <view class="menu-card card">
+  <block wx:if="{{showAccount}}">
+    <view wx:if="{{loading}}" class="account-card card">正在加载账号资料…</view>
+    <view wx:elif="{{error}}" class="account-card card"><view class="account-copy"><text>{{error}}</text><button class="plain-button" bindtap="loadProfile">重试</button></view></view>
+    <view wx:elif="{{profile}}" class="account-card card" bindtap="editProfile">
+      <view class="account-avatar logged-avatar">{{initial}}</view>
+      <view class="account-copy"><text class="account-name">{{profile.name}}</text><text class="account-description">绑定微信头像和昵称</text></view>
+      <text class="menu-chevron">›</text>
+    </view>
+  </block>
+  <view class="menu-card card {{showAccount ? '' : 'menu-card-first'}}">
     <view class="menu-row" data-page="my-classes" bindtap="openPage"><text>我的课程</text><text class="menu-chevron">›</text></view>
     <view class="menu-row" data-page="financial-reports" bindtap="openPage"><text>财务报表</text><text class="menu-chevron">›</text></view>
     <view class="menu-row" data-page="about" bindtap="openPage"><text>关于</text><text class="menu-chevron">›</text></view>

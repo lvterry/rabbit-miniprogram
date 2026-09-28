@@ -1,8 +1,8 @@
 const { getProfile, updateProfile } = require('../../utils/account-api')
 
 Page({
-  data: { profile: null, loading: false, error: '', initial: '', editOpen: false, draftName: '', saving: false, formError: '' },
-  onShow() { this.loadProfile() },
+  data: { showAccount: false, profile: null, loading: false, error: '', initial: '', editOpen: false, draftName: '', saving: false, formError: '' },
+  onShow() { if (this.data.showAccount) this.loadProfile() },
   loadProfile() {
     const requestId = (this.requestId || 0) + 1
     this.requestId = requestId
