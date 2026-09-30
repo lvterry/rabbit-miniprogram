@@ -2,10 +2,14 @@
   <block wx:if="{{showAccount}}">
     <view wx:if="{{loading}}" class="account-card card">正在加载账号资料…</view>
     <view wx:elif="{{error}}" class="account-card card"><view class="account-copy"><text>{{error}}</text><button class="plain-button" bindtap="loadProfile">重试</button></view></view>
-    <view wx:elif="{{profile}}" class="account-card card" bindtap="editProfile">
-      <view class="account-avatar logged-avatar">{{initial}}</view>
-      <view class="account-copy"><text class="account-name">{{profile.name}}</text><text class="account-description">绑定微信头像和昵称</text></view>
+    <button wx:elif="{{profile && !profile.loggedIn}}" class="account-card account-login card" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber" disabled="{{signingIn}}">
+      <view class="account-avatar"><image src="/assets/avatar-placeholder.svg" mode="aspectFit" /></view>
+      <text class="account-name">{{signingIn ? '正在登录…' : '点击注册/登录'}}</text>
       <text class="menu-chevron">›</text>
+    </button>
+    <view wx:elif="{{profile}}" class="account-card card">
+      <view class="account-avatar"><image src="/assets/avatar-placeholder.svg" mode="aspectFit" /></view>
+      <text class="account-name">{{profile.phoneMasked}}</text>
     </view>
   </block>
   <view class="menu-card card {{showAccount ? '' : 'menu-card-first'}}">
@@ -15,8 +19,3 @@
   </view>
 </view>
 <tab-bar active="me" />
-<bottom-sheet visible="{{editOpen}}" title="修改姓名" bind:close="closeEdit">
-  <input class="profile-input" value="{{draftName}}" maxlength="40" bindinput="onNameInput" placeholder="填写你的姓名" />
-  <text wx:if="{{formError}}" class="profile-error">{{formError}}</text>
-  <button class="primary-button profile-save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="saveProfile">保存姓名</button>
-</bottom-sheet>

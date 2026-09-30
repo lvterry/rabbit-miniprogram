@@ -1,3 +1,4 @@
+const { accountProfile } = require('./account-profile')
 const { domainError, fingerprint, financialReport, sessionView, sessionTransition, randomUUID } = require('./domain')
 
 const sqlDateTime = value => value.replace('T', ' ').replace(/Z$/, '')
@@ -162,14 +163,15 @@ function createMysqlBusinessStore(pool) {
 
     async getProfile(owner) {
       await pool.execute('INSERT IGNORE INTO accounts (id, owner_openid, created_at) VALUES (?, ?, UTC_TIMESTAMP(3))', [randomUUID(), owner])
-      const [rows] = await pool.execute(`SELECT id, name, DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt
+      const [rows] = await pool.execute(`SELECT id, phone_number AS phoneNumber,
+                DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt
         FROM accounts WHERE owner_openid = ?`, [owner])
-      return rows[0]
+      return accountProfile(rows[0])
     },
 
-    async updateProfile(owner, name) {
+    async bindPhone(owner, { phoneNumber, countryCode }) {
       await this.getProfile(owner)
-      await pool.execute('UPDATE accounts SET name = ? WHERE owner_openid = ?', [name, owner])
+      await pool.execute('UPDATE accounts SET phone_number = ?, phone_country_code = ? WHERE owner_openid = ?', [phoneNumber, countryCode, owner])
       return this.getProfile(owner)
     },
 

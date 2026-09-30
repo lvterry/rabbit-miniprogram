@@ -5,7 +5,10 @@ const { createApp } = require('../src/app')
 
 async function withApi(store, run) {
   const server = await new Promise(resolve => {
-    const listening = createApp({ store }).listen(0, '127.0.0.1', () => resolve(listening))
+    const listening = createApp({ store, exchangePhoneCode: async code => {
+      if (code !== 'phone-code') { const error = new Error('Invalid phone authorization'); error.code = 'PHONE_AUTH_INVALID'; throw error }
+      return { phoneNumber: '13400003931', countryCode: '86' }
+    } }).listen(0, '127.0.0.1', () => resolve(listening))
   })
   const owner = randomUUID(), other = randomUUID()
   async function request(path, method = 'GET', body, user = owner) {
@@ -169,7 +172,18 @@ function businessContract(test, label, storeFactory) {
       assert.equal((await request('/sessions', 'POST', { courseId: course.id, studentIds: [student.id], date: businessDate(), start: '09:00', end: '10:00', requestId: randomUUID() }, other)).status, 404)
       const profile = (await request('/me')).body.profile
       assert.equal('ownerOpenid' in profile, false)
-      assert.equal((await request('/me', 'PATCH', { name: '我的姓名' })).body.profile.name, '我的姓名')
+      assert.equal(profile.loggedIn, false)
+      assert.equal(profile.phoneMasked, '')
+      assert.equal((await request('/me/phone', 'POST', { phoneNumber: '13400003931' })).status, 400)
+      assert.equal((await request('/me/phone', 'POST', { code: 'invalid' })).status, 400)
+      assert.equal((await request('/me/phone', 'POST', { code: 'phone-code' }, '')).status, 401)
+      const bound = (await request('/me/phone', 'POST', { code: 'phone-code' })).body.profile
+      assert.equal(bound.id, profile.id)
+      assert.equal(bound.loggedIn, true)
+      assert.equal(bound.phoneMasked, '134****3931')
+      assert.equal(JSON.stringify(bound).includes('13400003931'), false)
+      assert.deepEqual((await request('/me')).body.profile, bound)
+      assert.equal((await request('/me', 'GET', undefined, other)).body.profile.loggedIn, false)
       assert.notEqual((await request('/me', 'GET', undefined, other)).body.profile.id, profile.id)
       const fields = { message: '真实反馈', requestId: randomUUID() }
       const feedback = await request('/feedback', 'POST', fields)

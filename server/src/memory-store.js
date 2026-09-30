@@ -1,3 +1,4 @@
+const { accountProfile } = require('./account-profile')
 // Test adapter only. Production startup always supplies the MySQL store.
 const { domainError, fingerprint, financialReport, sessionView, sessionTransition, randomUUID, businessDate } = require('./domain')
 
@@ -119,8 +120,15 @@ function createMemoryStore() {
         session.history.unshift(event); return { session: viewSession(session) }
       })
     },
-    async getProfile(owner) { if (!accounts.has(owner)) accounts.set(owner, { id: randomUUID(), name: '微信用户', createdAt: new Date().toISOString() }); return { ...accounts.get(owner) } },
-    async updateProfile(owner, name) { await this.getProfile(owner); accounts.get(owner).name = name; return { ...accounts.get(owner) } },
+    async getProfile(owner) {
+      if (!accounts.has(owner)) accounts.set(owner, { id: randomUUID(), phoneNumber: '', createdAt: new Date().toISOString() })
+      return accountProfile(accounts.get(owner))
+    },
+    async bindPhone(owner, phone) {
+      await this.getProfile(owner)
+      Object.assign(accounts.get(owner), phone)
+      return accountProfile(accounts.get(owner))
+    },
     async addFeedback(owner, message, key) { return mutate(owner, key, 'feedback', { message }, () => ({ feedback: { id: randomUUID(), message, createdAt: new Date().toISOString() } })) },
     async getFinancialReport(owner) { return financialReport(payments.filter(payment => payment.owner === owner).map(payment => ({ ...payment, courseName: (findCourse(owner, payment.courseId) || {}).name || payment.courseName }))) }
   }

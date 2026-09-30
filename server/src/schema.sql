@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS accounts (
   id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   owner_openid VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   name VARCHAR(40) NOT NULL DEFAULT '微信用户',
+  phone_number VARCHAR(32) NOT NULL DEFAULT '',
+  phone_country_code VARCHAR(8) NOT NULL DEFAULT '',
   created_at DATETIME(3) NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_accounts_owner (owner_openid)

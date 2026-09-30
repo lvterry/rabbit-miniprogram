@@ -5,7 +5,9 @@ function profileFrom(data) {
   return data.profile
 }
 function getProfile() { return requestCloudApi({ path: '/me', method: 'GET' }).then(profileFrom) }
-function updateProfile(name) { return requestCloudApi({ path: '/me', method: 'PATCH', data: { name } }).then(profileFrom) }
+function loginWithPhone(code) {
+  return requestCloudApi({ path: '/me/phone', method: 'POST', data: { code } }).then(profileFrom)
+}
 function submitFeedback(message) { return mutateCloudApi('feedback', { path: '/feedback', method: 'POST', data: { message } }) }
 function getRevenueReport() {
   return requestCloudApi({ path: '/reports/revenue', method: 'GET' }).then(data => {
@@ -13,4 +15,4 @@ function getRevenueReport() {
     return data.report
   })
 }
-module.exports = { getProfile, updateProfile, submitFeedback, getRevenueReport }
+module.exports = { getProfile, loginWithPhone, submitFeedback, getRevenueReport }

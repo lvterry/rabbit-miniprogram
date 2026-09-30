@@ -1,9 +1,10 @@
+const { exchangePhoneCode: defaultPhoneExchange } = require('./wechat-phone')
 const { randomUUID } = require('node:crypto')
 const express = require('express')
 const { createMemoryStore } = require('./memory-store')
 const { businessDate, validRange, operationKey } = require('./domain')
 
-function createApp({ store = createMemoryStore() } = {}) {
+function createApp({ store = createMemoryStore(), exchangePhoneCode = defaultPhoneExchange } = {}) {
   const app = express()
 
   app.use(express.json())
@@ -36,10 +37,11 @@ function createApp({ store = createMemoryStore() } = {}) {
     res.json({ profile: await store.getProfile(req.ownerOpenid) })
   })
 
-  app.patch('/me', requireWeChatUser, async (req, res) => {
-    const { name } = req.body || {}
-    if (typeof name !== 'string' || !name.trim() || name.trim().length > 40) return res.status(400).json({ error: 'Invalid profile fields' })
-    res.json({ profile: await store.updateProfile(req.ownerOpenid, name.trim()) })
+  app.post('/me/phone', requireWeChatUser, async (req, res) => {
+    const { code } = req.body || {}
+    if (typeof code !== 'string' || !code.trim() || code.length > 256) return res.status(400).json({ error: 'Invalid authorization code' })
+    const phone = await exchangePhoneCode(code)
+    res.json({ profile: await store.bindPhone(req.ownerOpenid, phone) })
   })
 
   app.post('/feedback', requireWeChatUser, requireRequestKey, async (req, res) => {
@@ -247,7 +249,7 @@ function createApp({ store = createMemoryStore() } = {}) {
     if (error.code === 'COURSE_NOT_FOUND') return res.status(404).json({ error: 'Course not found' })
     if (error.code === 'STUDENT_NOT_FOUND') return res.status(404).json({ error: 'Student not found' })
     const statusByCode = { SESSION_NOT_FOUND: 404, SESSION_CONFLICT: 409, IDEMPOTENCY_CONFLICT: 409,
-      INSUFFICIENT_CREDITS: 409, COURSE_REQUIRED: 400, ENROLLMENT_REQUIRED: 400, INVALID_RANGE: 400 }
+      INSUFFICIENT_CREDITS: 409, COURSE_REQUIRED: 400, ENROLLMENT_REQUIRED: 400, INVALID_RANGE: 400, PHONE_AUTH_INVALID: 400, PHONE_SERVICE_UNAVAILABLE: 503 }
     if (statusByCode[error.code]) return res.status(statusByCode[error.code]).json({ error: error.message, code: error.code })
     console.error('Request failed:', error)
     res.status(500).json({ error: 'Internal Server Error' })

@@ -1,3 +1,18 @@
+async function migrateAccountPhone(pool) {
+  const [columns] = await pool.execute(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'accounts'`)
+  const existing = new Set(columns.map(column => column.COLUMN_NAME))
+  for (const name of ['phone_number', 'phone_country_code']) {
+    if (existing.has(name)) continue
+    try {
+      const length = name === 'phone_number' ? 32 : 8
+      await pool.query(`ALTER TABLE accounts ADD COLUMN ${name} VARCHAR(${length}) NOT NULL DEFAULT ''`)
+    } catch (error) {
+      if (error.code !== 'ER_DUP_FIELDNAME') throw error
+    }
+  }
+}
+
 // One-time, transactional conversion of the existing cloud data. No local demo seeds are imported.
 async function migrateCloudData(pool) {
   const connection = await pool.getConnection()
@@ -34,4 +49,4 @@ async function migrateCloudData(pool) {
   }
 }
 
-module.exports = { migrateCloudData }
+module.exports = { migrateAccountPhone, migrateCloudData }

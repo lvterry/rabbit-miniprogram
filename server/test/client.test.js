@@ -35,7 +35,7 @@ function loadClient(baseUrl) {
 }
 
 async function withClient(run) {
-  const server = await new Promise(resolve => { const listening = createApp().listen(0, '127.0.0.1', () => resolve(listening)) })
+  const server = await new Promise(resolve => { const listening = createApp({ exchangePhoneCode: async () => ({ phoneNumber: '13400003931', countryCode: '86' }) }).listen(0, '127.0.0.1', () => resolve(listening)) })
   try { await run(loadClient(`http://127.0.0.1:${server.address().port}`)) }
   finally { await new Promise(resolve => server.close(resolve)) }
 }
@@ -62,8 +62,12 @@ test('client pages use one API for appointment, today, complete, student balance
     const report = load('pages/financial-reports/index.js'); await report.loadReport()
     assert.equal(report.data.totalText, '88.5')
     const me = load('pages/me/index.js'); await me.loadProfile()
-    me.setData({ draftName: '老师姓名' }); await me.saveProfile()
-    assert.equal(me.data.profile.name, '老师姓名')
+    assert.equal(me.data.profile.loggedIn, false)
+    await me.onGetPhoneNumber({ detail: { code: 'phone-code' } })
+    assert.equal(me.data.profile.phoneMasked, '134****3931')
+    assert.equal(me.data.profile.loggedIn, true)
+    await me.loadProfile()
+    assert.equal(me.data.profile.phoneMasked, '134****3931')
     const feedback = load('pages/about/index.js'); feedback.setData({ feedbackText: '反馈已入库' }); await feedback.submitFeedback()
     assert.equal(feedback.data.error, '')
   })
@@ -113,5 +117,27 @@ test('client page errors stay retryable and never populate mock data', async () 
     assert.equal(report.data.months.length, 0); assert.ok(report.data.error)
     const about = load('pages/about/index.js'); about.setData({ feedbackText: '反馈' }); await about.submitFeedback()
     assert.equal(about.data.saving, false); assert.ok(about.data.error)
+  })
+})
+
+test('phone authorization denial and failures preserve the unregistered state', async () => {
+  await withClient(async ({ load, wx }) => {
+    const me = load('pages/me/index.js')
+    await me.loadProfile()
+    const original = wx.cloud.callContainer
+    let phoneCalls = 0
+    wx.cloud.callContainer = async options => {
+      if (options.path === '/me/phone') {
+        phoneCalls += 1
+        return { statusCode: 400, data: { code: 'PHONE_AUTH_INVALID', error: 'Expired' } }
+      }
+      return original(options)
+    }
+    me.onGetPhoneNumber({ detail: { errMsg: 'getPhoneNumber:fail user deny' } })
+    assert.equal(phoneCalls, 0)
+    await me.onGetPhoneNumber({ detail: { code: 'expired' } })
+    assert.equal(phoneCalls, 1)
+    assert.equal(me.data.profile.loggedIn, false)
+    assert.equal(me.data.signingIn, false)
   })
 })

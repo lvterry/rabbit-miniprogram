@@ -1,7 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { createMysqlBusinessStore } = require('./mysql-business-store')
-const { migrateCloudData } = require('./migrations')
+const { migrateAccountPhone, migrateCloudData } = require('./migrations')
 
 function createMysqlStore(pool) {
   const business = createMysqlBusinessStore(pool)
@@ -62,6 +62,7 @@ function createMysqlStore(pool) {
         await pool.query(statement)
       }
       await pool.query('SELECT 1')
+      await migrateAccountPhone(pool)
       await migrateCloudData(pool)
     },
 
