@@ -17,7 +17,6 @@ function formatCloudStudent(student) {
   return {
     ...student,
     className: courseName || '未关联课程',
-    startedLabel: `创建于 ${displayTime(student.createdAt).split(' ')[0]}`,
     creditHistory: (student.creditHistory || []).map(item => ({ ...item, time: displayTime(item.time) })),
     appointmentHistory: (student.appointmentHistory || []).map(item => ({ ...item, time: displayTime(item.time) })),
     appointments,

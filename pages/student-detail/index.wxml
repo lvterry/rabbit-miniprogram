@@ -5,14 +5,13 @@
   <view class="student-profile card">
     <view class="profile-title-row"><text class="profile-title">{{student.name}}</text><text class="action-link" bindtap="openEdit">编辑</text></view>
     <view class="profile-row"><text class="profile-label">课程</text><text class="profile-value course-value">{{student.className}}</text></view>
-    <view class="profile-row"><text class="profile-label">开始于</text><text class="profile-value">{{student.startedLabel}}</text></view>
     <view class="profile-row notes-row"><text class="profile-label">备注</text><text class="profile-value">{{student.notes || '暂无备注'}}</text></view>
   </view>
 
   <view class="credits-section">
     <view class="section-heading"><text class="section-title">课时</text></view>
     <view class="credits-card card">
-      <view class="credits-summary"><text class="credits-number">{{student.remainingCredits}} 次剩余</text><text class="credits-total">{{student.remainingCredits}}/{{student.totalCredits}}</text></view>
+      <view class="credits-summary"><text class="credits-number">剩余 {{student.remainingCredits}} 次</text><text class="credits-total">{{student.remainingCredits}}/{{student.totalCredits}}</text></view>
       <view class="progress-track"><view class="progress-value" style="width:{{creditProgress}}%"></view></view>
     </view>
     <view class="section-links credits-links"><text class="action-link" data-sheet="creditHistory" bindtap="openSheet">课时记录 →</text></view>

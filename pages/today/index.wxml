@@ -2,7 +2,7 @@
   <view class="hero">
     <view class="hero-copy">
       <text class="hero-kicker">{{dateText}}</text>
-      <text class="hero-title">{{loading ? '正在加载课程安排…' : error ? '课程安排暂时不可用' : count === 0 ? '今天没有课，祝你过得开心' : '今天有 ' + count + ' 节课，祝一切顺利'}}</text>
+      <text class="hero-title">{{loading ? '正在加载课程安排…' : error ? '课程安排暂时不可用' : count === 0 ? '今天没有课，祝你开心～' : '今天有 ' + count + ' 节课，一切顺利～'}}</text>
     </view>
     <image class="hero-logo" src="/rabbit-logo.png" mode="aspectFit" />
   </view>
@@ -32,16 +32,16 @@
 </view>
 <tab-bar active="today" />
 
-<bottom-sheet visible="{{onboardingStep === 'course'}}" title="创建第一门课程" bind:close="closeOnboarding">
+<bottom-sheet visible="{{onboardingStep === 'course'}}" title="添加课程" bind:close="closeOnboarding">
   <view class="onboarding-fields">
-    <text class="onboarding-hint">先创建一门课程，开始安排学员和课次。</text>
+    <text class="onboarding-hint">先添加你教的课程，再开始安排学员和课次。</text>
     <text class="onboarding-label">课程名称</text>
     <input class="onboarding-input" value="{{courseName}}" placeholder="输入课程名称" maxlength="40" bindinput="onCourseNameInput" />
     <text wx:if="{{courseNameError}}" class="onboarding-error">{{courseNameError}}</text>
     <text class="onboarding-label onboarding-field-gap">课程介绍（选填）</text>
     <textarea class="onboarding-textarea" value="{{courseDescription}}" placeholder="简单介绍这门课程" maxlength="500" bindinput="onCourseDescriptionInput" />
     <text wx:if="{{courseSaveError}}" class="onboarding-error">{{courseSaveError}}</text>
-    <button class="primary-button onboarding-primary" loading="{{onboardingSaving}}" disabled="{{onboardingSaving}}" bindtap="saveOnboardingCourse">创建课程</button>
+    <button class="primary-button onboarding-primary" loading="{{onboardingSaving}}" disabled="{{onboardingSaving}}" bindtap="saveOnboardingCourse">添加课程</button>
   </view>
 </bottom-sheet>
 
