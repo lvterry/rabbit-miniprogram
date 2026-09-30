@@ -15,7 +15,7 @@
 <bottom-sheet visible="{{studentSheetOpen}}" title="{{selectedCourseName}} · 学员" bind:close="closeStudentSheet">
   <view wx:if="{{selectedStudents.length}}" class="course-student-list">
     <view wx:for="{{selectedStudents}}" wx:key="id" class="course-student-row">
-      <view class="course-student-avatar">{{item.initial}}</view>
+      <image class="course-student-avatar" src="{{item.avatarSrc}}" mode="aspectFit" />
       <text class="course-student-name">{{item.name}}</text>
     </view>
   </view>

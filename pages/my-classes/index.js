@@ -1,3 +1,4 @@
+const { studentAvatar } = require('../../utils/student-avatar')
 const { listCourses } = require('../../utils/course-api')
 const { listStudents } = require('../../utils/student-api')
 
@@ -21,7 +22,7 @@ Page({
           const courseStudents = students.filter(student => student.courseId === course.id)
           return {
             ...course,
-            students: courseStudents.map(student => ({ ...student, initial: student.name.slice(0, 1) })),
+            students: courseStudents.map(student => ({ ...student, avatarSrc: studentAvatar(student) })),
             studentCount: courseStudents.length
           }
         })

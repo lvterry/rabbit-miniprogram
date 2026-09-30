@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS students (
   course_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
   name VARCHAR(40) NOT NULL,
   notes VARCHAR(300) NOT NULL DEFAULT '',
+  avatar JSON NULL,
   total_credits INT UNSIGNED NOT NULL DEFAULT 0,
   remaining_credits INT UNSIGNED NOT NULL DEFAULT 0,
   created_at DATETIME(3) NOT NULL,

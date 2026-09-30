@@ -1,3 +1,4 @@
+const { studentAvatar } = require('../../utils/student-avatar')
 const { listCourses } = require('../../utils/course-api')
 const { listStudents, createStudent } = require('../../utils/student-api')
 
@@ -18,7 +19,7 @@ Page({
     return listStudents()
       .then(students => {
         if (requestId !== this.studentRequestId) return
-        const displayStudents = students.map(student => ({ ...student, initial: student.name.slice(0, 1) }))
+        const displayStudents = students.map(student => ({ ...student, avatarSrc: studentAvatar(student) }))
         this.setData({
           activeStudents: displayStudents.filter(student => student.isActive),
           inactiveStudents: displayStudents.filter(student => !student.isActive),

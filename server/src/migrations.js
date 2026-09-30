@@ -49,4 +49,15 @@ async function migrateCloudData(pool) {
   }
 }
 
-module.exports = { migrateAccountPhone, migrateCloudData }
+async function migrateStudentAvatars(pool) {
+  const [columns] = await pool.execute(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'students' AND COLUMN_NAME = 'avatar'`)
+  if (!columns.length) {
+    try { await pool.query('ALTER TABLE students ADD COLUMN avatar JSON NULL') }
+    catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error }
+  }
+  await pool.query(`UPDATE students SET avatar = JSON_OBJECT('style', 'geometric', 'version', 1, 'seed', id)
+    WHERE avatar IS NULL`)
+}
+
+module.exports = { migrateAccountPhone, migrateCloudData, migrateStudentAvatars }

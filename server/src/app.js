@@ -174,6 +174,7 @@ function createApp({ store = createMemoryStore(), exchangePhoneCode = defaultPho
       createdAt: new Date().toISOString(),
       ownerOpenid: req.ownerOpenid
     }
+    student.avatar = { style: 'geometric', version: 1, seed: student.id }
     res.status(201).json(await store.createStudent(student))
   })
 

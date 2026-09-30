@@ -6,7 +6,7 @@
   <view wx:if="{{!loading && !error && activeStudents.length}}" class="student-section">
     <view class="section-heading"><text class="section-title">活跃学员</text></view>
     <view wx:for="{{activeStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
-      <view class="avatar">{{item.initial}}</view>
+      <image class="avatar" src="{{item.avatarSrc}}" mode="aspectFit" />
       <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-course">{{item.courseName}}</text></view>
       <text class="arrow">›</text>
     </view>
@@ -15,7 +15,7 @@
   <view wx:if="{{!loading && !error && inactiveStudents.length}}" class="student-section inactive-section">
     <view class="section-heading"><text class="section-title">未活跃</text></view>
     <view wx:for="{{inactiveStudents}}" wx:key="id" class="student-card card" data-id="{{item.id}}" bindtap="openStudent">
-      <view class="avatar">{{item.initial}}</view>
+      <image class="avatar" src="{{item.avatarSrc}}" mode="aspectFit" />
       <view class="student-copy"><text class="student-name">{{item.name}}</text><text class="student-course">未关联课程</text></view>
       <text class="arrow">›</text>
     </view>

@@ -7,8 +7,8 @@
 .profile-row { display:flex; align-items:center; gap:22rpx; padding:22rpx 0; border-top:2rpx solid var(--color-border); }
 .profile-label { width:100rpx; flex-shrink:0; color:var(--color-text-weak); font-size:var(--font-size-normal); }
 .profile-value { flex:1; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; line-height:1.5; }
-.course-value { color:var(--color-brand); }
-.notes-row { align-items:flex-start; }
+.course-value { color:#000; }
+.notes-row { align-items:flex-start; border-top:0; }
 .credits-section,.upcoming-section { margin-top:38rpx; }
 .section-heading { margin:0 4rpx 18rpx; }
 .credits-card { padding:26rpx; }

@@ -1,7 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { createMysqlBusinessStore } = require('./mysql-business-store')
-const { migrateAccountPhone, migrateCloudData } = require('./migrations')
+const { migrateAccountPhone, migrateCloudData, migrateStudentAvatars } = require('./migrations')
 
 function createMysqlStore(pool) {
   const business = createMysqlBusinessStore(pool)
@@ -19,6 +19,7 @@ function createMysqlStore(pool) {
     const student = {
       id: row.id,
       name: row.name,
+      avatar: (typeof row.avatar === 'string' ? JSON.parse(row.avatar) : row.avatar) || { style: 'geometric', version: 1, seed: row.id },
       courseId: row.courseId || '',
       courseName: row.courseName || '',
       notes: row.notes,
@@ -36,7 +37,7 @@ function createMysqlStore(pool) {
   async function findStudentRow(ownerOpenid, studentId, runner = pool) {
     const [rows] = await runner.execute(
       `SELECT s.id, s.owner_openid AS ownerOpenid, s.course_id AS courseId,
-              s.name, s.notes, s.total_credits AS totalCredits,
+              s.name, s.notes, s.avatar, s.total_credits AS totalCredits,
               s.remaining_credits AS remainingCredits,
               DATE_FORMAT(s.created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt,
               c.name AS courseName
@@ -73,6 +74,7 @@ function createMysqlStore(pool) {
         await pool.query(statement)
       }
       await pool.query('SELECT 1')
+      await migrateStudentAvatars(pool)
       await migrateAccountPhone(pool)
       await migrateCloudData(pool)
     },
@@ -129,7 +131,7 @@ function createMysqlStore(pool) {
 
     async listStudents(ownerOpenid) {
       const [rows] = await pool.execute(
-        `SELECT s.id, s.course_id AS courseId, c.name AS courseName, s.name, s.notes,
+        `SELECT s.id, s.course_id AS courseId, c.name AS courseName, s.name, s.notes, s.avatar,
                 s.total_credits AS totalCredits, s.remaining_credits AS remainingCredits,
                 DATE_FORMAT(s.created_at, '%Y-%m-%dT%H:%i:%s.%fZ') AS createdAt
            FROM students s
@@ -146,10 +148,10 @@ function createMysqlStore(pool) {
       }
       await pool.execute(
         `INSERT INTO students
-          (id, owner_openid, course_id, name, notes, total_credits, remaining_credits, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, owner_openid, course_id, name, notes, total_credits, remaining_credits, created_at, avatar)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [student.id, student.ownerOpenid, student.courseId || null, student.name, student.notes,
-          student.totalCredits, student.remainingCredits, sqlDateTime(student.createdAt)]
+          student.totalCredits, student.remainingCredits, sqlDateTime(student.createdAt), JSON.stringify(student.avatar || { style: 'geometric', version: 1, seed: student.id })]
       )
       return this.getStudent(student.ownerOpenid, student.id, false)
     },
