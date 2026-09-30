@@ -31,3 +31,31 @@
   </block>
 </view>
 <tab-bar active="today" />
+
+<bottom-sheet visible="{{onboardingStep === 'course'}}" title="创建第一门课程" bind:close="closeOnboarding">
+  <view class="onboarding-fields">
+    <text class="onboarding-hint">先创建一门课程，开始安排学员和课次。</text>
+    <text class="onboarding-label">课程名称</text>
+    <input class="onboarding-input" value="{{courseName}}" placeholder="输入课程名称" maxlength="40" bindinput="onCourseNameInput" />
+    <text wx:if="{{courseNameError}}" class="onboarding-error">{{courseNameError}}</text>
+    <text class="onboarding-label onboarding-field-gap">课程介绍（选填）</text>
+    <textarea class="onboarding-textarea" value="{{courseDescription}}" placeholder="简单介绍这门课程" maxlength="500" bindinput="onCourseDescriptionInput" />
+    <text wx:if="{{courseSaveError}}" class="onboarding-error">{{courseSaveError}}</text>
+    <button class="primary-button onboarding-primary" loading="{{onboardingSaving}}" disabled="{{onboardingSaving}}" bindtap="saveOnboardingCourse">创建课程</button>
+  </view>
+</bottom-sheet>
+
+<bottom-sheet visible="{{onboardingStep === 'student'}}" title="添加第一位学员" bind:close="closeOnboarding">
+  <view class="onboarding-fields">
+    <text class="onboarding-hint">课程已创建，接下来添加一位学员。</text>
+    <text class="onboarding-label">姓名</text>
+    <input class="onboarding-input" value="{{studentName}}" placeholder="输入学员姓名" maxlength="40" bindinput="onStudentNameInput" />
+    <text wx:if="{{studentNameError}}" class="onboarding-error">{{studentNameError}}</text>
+    <text class="onboarding-label onboarding-field-gap">课程</text>
+    <view class="onboarding-course">{{onboardingCourseName}}</view>
+    <text class="onboarding-label onboarding-field-gap">备注（选填）</text>
+    <textarea class="onboarding-textarea" value="{{studentNotes}}" placeholder="添加学员备注" maxlength="200" bindinput="onStudentNotesInput" />
+    <text wx:if="{{studentSaveError}}" class="onboarding-error">{{studentSaveError}}</text>
+    <button class="primary-button onboarding-primary" loading="{{onboardingSaving}}" disabled="{{onboardingSaving}}" bindtap="saveOnboardingStudent">创建学员</button>
+  </view>
+</bottom-sheet>

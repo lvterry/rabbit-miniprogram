@@ -56,6 +56,17 @@ function createMysqlStore(pool) {
 
   return {
     ...business,
+    async clearUserData(ownerOpenid) {
+      return business.transaction(async connection => {
+        for (const table of [
+          'bookings', 'session_events', 'credit_ledger', 'student_appointments',
+          'student_credits', 'payments', 'class_sessions', 'students', 'courses',
+          'feedback', 'accounts', 'operation_requests'
+        ]) {
+          await connection.execute(`DELETE FROM ${table} WHERE owner_openid = ?`, [ownerOpenid])
+        }
+      })
+    },
     async initialize() {
       const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
       for (const statement of schema.split(';').map(item => item.trim()).filter(Boolean)) {

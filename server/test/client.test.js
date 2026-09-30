@@ -10,6 +10,7 @@ function loadClient(baseUrl) {
   const wx = {
     getStorageSync: key => structuredClone(storage.get(key)),
     setStorageSync: (key, value) => storage.set(key, structuredClone(value)),
+    removeStorageSync: key => storage.delete(key),
     showToast() {}, navigateTo() {}, navigateBack() {},
     cloud: { init() {}, async callContainer(options) {
       const response = await fetch(`${baseUrl}${options.path}`, { method: options.method,
@@ -70,6 +71,102 @@ test('client pages use one API for appointment, today, complete, student balance
     assert.equal(me.data.profile.phoneMasked, '134****3931')
     const feedback = load('pages/about/index.js'); feedback.setData({ feedbackText: '反馈已入库' }); await feedback.submitFeedback()
     assert.equal(feedback.data.error, '')
+  })
+})
+
+test('onboarding creates a course, then a student, and opens the student detail', async () => {
+  await withClient(async ({ load, wx }) => {
+    const navigations = []
+    wx.navigateTo = options => navigations.push(options.url)
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, 'course')
+    today.setData({ courseName: '  绘画课  ', courseDescription: '  每周一次  ' })
+    await today.saveOnboardingCourse()
+    assert.equal(today.data.onboardingStep, 'student')
+    assert.equal(today.data.onboardingCourseName, '绘画课')
+    today.setData({ studentName: '  小明  ', studentNotes: '  周末上课  ' })
+    await today.saveOnboardingStudent()
+    assert.equal(today.data.onboardingStep, '')
+    assert.equal(navigations.length, 1)
+    const studentId = decodeURIComponent(navigations[0].split('id=')[1])
+    const student = await load('utils/student-api.js').getStudent(studentId)
+    assert.equal(student.name, '小明')
+    assert.equal(student.notes, '周末上课')
+    assert.equal(student.courseId, today.data.onboardingCourseId)
+  })
+})
+
+test('me page confirms clearing data and reopens onboarding', async () => {
+  await withClient(async ({ load, wx, storage }) => {
+    const courses = load('utils/course-api.js')
+    const students = load('utils/student-api.js')
+    const course = await courses.createCourse({ name: '测试课程' })
+    await students.createStudent({ name: '测试学员', courseId: course.id })
+    storage.set('xiaotu-pending-requests-v1', { pending: true })
+    const me = load('pages/me/index.js')
+    let modal
+    wx.showModal = options => { modal = options }
+    me.confirmClearData()
+    assert.match(modal.content, /无法恢复/)
+    modal.success({ confirm: false })
+    assert.equal((await courses.listCourses()).length, 1)
+
+    let reLaunchUrl = ''
+    wx.reLaunch = options => { reLaunchUrl = options.url }
+    let clearPromise
+    const clearData = me.clearData.bind(me)
+    me.clearData = () => { clearPromise = clearData(); return clearPromise }
+    me.confirmClearData()
+    modal.success({ confirm: true })
+    await clearPromise
+    assert.equal(reLaunchUrl, '/pages/today/index')
+    assert.equal(storage.has('xiaotu-pending-requests-v1'), false)
+    assert.equal((await courses.listCourses()).length, 0)
+    assert.equal((await students.listStudents()).length, 0)
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, 'course')
+  })
+})
+
+test('onboarding requires both course and student lists to be empty', async () => {
+  await withClient(async ({ load }) => {
+    const courses = load('utils/course-api.js')
+    const students = load('utils/student-api.js')
+    const course = await courses.createCourse({ name: '已有课程' })
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, '')
+    await students.createStudent({ name: '已有学员', courseId: course.id })
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, '')
+  })
+  await withClient(async ({ load }) => {
+    await load('utils/student-api.js').createStudent({ name: '未关联学员', courseId: '' })
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, '')
+  })
+})
+
+test('closing onboarding shows home, and a failed lookup never assumes an empty account', async () => {
+  await withClient(async ({ load }) => {
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    today.closeOnboarding()
+    assert.equal(today.data.onboardingStep, '')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, '')
+  })
+  await withClient(async ({ load, wx }) => {
+    const original = wx.cloud.callContainer
+    wx.cloud.callContainer = options => options.path === '/students'
+      ? Promise.resolve({ statusCode: 503, data: { error: 'Unavailable' } })
+      : original(options)
+    const today = load('pages/today/index.js')
+    await today.onShow()
+    assert.equal(today.data.onboardingStep, '')
   })
 })
 

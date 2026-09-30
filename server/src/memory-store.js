@@ -17,7 +17,7 @@ function createMemoryStore() {
       return structuredClone(previous.result)
     }
     const result = work()
-    if (key) requests.set(identity, { hash, result: structuredClone(result) })
+    if (key) requests.set(identity, { owner, hash, result: structuredClone(result) })
     return result
   }
 
@@ -46,6 +46,17 @@ function createMemoryStore() {
 
   return {
     async initialize() {}, async close() {},
+    async clearUserData(owner) {
+      for (const items of [courses, students, sessions, payments]) {
+        for (let index = items.length - 1; index >= 0; index -= 1) {
+          if ((items[index].ownerOpenid || items[index].owner) === owner) items.splice(index, 1)
+        }
+      }
+      accounts.delete(owner)
+      for (const [key, request] of requests) {
+        if (request.owner === owner) requests.delete(key)
+      }
+    },
     async listCourses(owner) { return courses.filter(item => item.ownerOpenid === owner).map(publicCourse) },
     async getCourse(owner, id) { const course = findCourse(owner, id); return course ? publicCourse(course) : null },
     async createCourse(course) {

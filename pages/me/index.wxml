@@ -17,5 +17,11 @@
     <view class="menu-row" data-page="financial-reports" bindtap="openPage"><text>财务报表</text><text class="menu-chevron">›</text></view>
     <view class="menu-row" data-page="about" bindtap="openPage"><text>关于</text><text class="menu-chevron">›</text></view>
   </view>
+  <view class="clear-card card">
+    <text class="clear-title">清空所有数据</text>
+    <text class="clear-description">删除当前微信账号的全部数据，用于重新测试首次进入流程。删除后无法恢复。</text>
+    <button class="clear-button" loading="{{clearingData}}" disabled="{{clearingData}}" bindtap="confirmClearData">{{clearingData ? '正在清空…' : '清空所有数据'}}</button>
+    <text wx:if="{{clearError}}" class="clear-error">{{clearError}}</text>
+  </view>
 </view>
 <tab-bar active="me" />

@@ -11,3 +11,8 @@ button.account-card.account-login[disabled] { background:var(--color-surface); }
 .menu-row { display:flex; align-items:center; justify-content:space-between; min-height:104rpx; font-size:var(--font-size-normal); font-weight:600; color:var(--color-text); }
 .menu-row + .menu-row { border-top:2rpx solid var(--color-border); }
 .account-copy { display:flex; flex:1; flex-direction:column; gap:8rpx; min-width:0; }
+.clear-card { display:flex; flex-direction:column; gap:16rpx; margin-top:28rpx; padding:28rpx; }
+.clear-title { font-size:var(--font-size-normal); font-weight:700; color:var(--color-status-cancelled); }
+.clear-description { font-size:var(--font-size-small); line-height:1.5; color:var(--color-text-weak); }
+button.clear-button { width:100%; height:80rpx; box-sizing:border-box; margin:4rpx 0 0; border:2rpx solid var(--color-status-cancelled); border-radius:20rpx; background:var(--color-surface); color:var(--color-status-cancelled); font-size:var(--font-size-normal); font-weight:650; }
+.clear-error { color:var(--color-status-cancelled); font-size:var(--font-size-small); }

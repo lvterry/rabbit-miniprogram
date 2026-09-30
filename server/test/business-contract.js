@@ -32,6 +32,37 @@ async function withApi(store, run) {
 }
 
 function businessContract(test, label, storeFactory) {
+  test(`${label}: clearing data removes only the current user's records`, async () => {
+    await withApi(await storeFactory(), async ({ request, create, credits, appointment, other }) => {
+      const { course, student } = await create()
+      const booking = (await appointment(student.id)).body.appointment
+      await credits(student.id, 3, 88)
+      const oldProfile = (await request('/me')).body.profile
+      assert.equal((await request('/me/phone', 'POST', { code: 'phone-code' })).body.profile.loggedIn, true)
+      const feedbackKey = randomUUID()
+      assert.equal((await request('/feedback', 'POST', { message: '旧反馈', requestId: feedbackKey })).status, 201)
+      const otherCourse = (await request('/courses', 'POST', { name: '其他用户课程' }, other)).body
+      const otherStudent = (await request('/students', 'POST', { name: '其他用户学员', courseId: otherCourse.id }, other)).body
+
+      assert.equal((await request('/me/data', 'DELETE', undefined, null)).status, 401)
+      assert.equal((await request('/me/data', 'DELETE')).status, 200)
+      assert.equal((await request('/courses')).body.courses.length, 0)
+      assert.equal((await request('/students')).body.students.length, 0)
+      assert.equal((await request('/sessions')).body.sessions.length, 0)
+      assert.equal((await request('/reports/revenue')).body.report.total, 0)
+      assert.equal((await request(`/courses/${course.id}`)).status, 404)
+      assert.equal((await request(`/students/${student.id}`)).status, 404)
+      assert.equal((await request(`/sessions/${booking.id}`)).status, 404)
+      const newProfile = (await request('/me')).body.profile
+      assert.notEqual(newProfile.id, oldProfile.id)
+      assert.equal(newProfile.loggedIn, false)
+      assert.equal((await request('/feedback', 'POST', { message: '新反馈', requestId: feedbackKey })).status, 201)
+      assert.equal((await request('/courses', 'GET', undefined, other)).body.courses.length, 1)
+      assert.equal((await request(`/students/${otherStudent.id}`, 'GET', undefined, other)).status, 200)
+      assert.equal((await request('/me/data', 'DELETE')).status, 200)
+    })
+  })
+
   test(`${label}: appointments, credits, consume, return and historical course identity`, async () => {
     await withApi(await storeFactory(), async ({ request, create, credits, appointment, action, balance }) => {
       const { course, student } = await create()

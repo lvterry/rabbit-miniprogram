@@ -5,6 +5,7 @@ function profileFrom(data) {
   return data.profile
 }
 function getProfile() { return requestCloudApi({ path: '/me', method: 'GET' }).then(profileFrom) }
+function clearMyData() { return requestCloudApi({ path: '/me/data', method: 'DELETE' }) }
 function loginWithPhone(code) {
   return requestCloudApi({ path: '/me/phone', method: 'POST', data: { code } }).then(profileFrom)
 }
@@ -15,4 +16,4 @@ function getRevenueReport() {
     return data.report
   })
 }
-module.exports = { getProfile, loginWithPhone, submitFeedback, getRevenueReport }
+module.exports = { getProfile, clearMyData, loginWithPhone, submitFeedback, getRevenueReport }

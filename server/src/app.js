@@ -37,6 +37,11 @@ function createApp({ store = createMemoryStore(), exchangePhoneCode = defaultPho
     res.json({ profile: await store.getProfile(req.ownerOpenid) })
   })
 
+  app.delete('/me/data', requireWeChatUser, async (req, res) => {
+    await store.clearUserData(req.ownerOpenid)
+    res.json({ ok: true })
+  })
+
   app.post('/me/phone', requireWeChatUser, async (req, res) => {
     const { code } = req.body || {}
     if (typeof code !== 'string' || !code.trim() || code.length > 256) return res.status(400).json({ error: 'Invalid authorization code' })

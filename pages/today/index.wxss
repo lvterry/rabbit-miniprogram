@@ -37,3 +37,13 @@
 .upcoming-info { display:flex; flex:1; flex-direction:column; gap:9rpx; padding-left:18rpx; min-width:0; }
 .upcoming-course { font-size:var(--font-size-small); color:var(--color-text-weak); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .empty { padding:55rpx; text-align:center; color:var(--color-text-weak); }
+.onboarding-fields { display:flex; flex-direction:column; }
+.onboarding-hint { margin-bottom:28rpx; color:var(--color-text-weak); font-size:var(--font-size-small); line-height:1.5; }
+.onboarding-label { margin-bottom:14rpx; color:var(--color-text-weak); font-size:var(--font-size-normal); }
+.onboarding-field-gap { margin-top:22rpx; }
+.onboarding-input, .onboarding-course, .onboarding-textarea { box-sizing:border-box; width:100%; background:var(--color-surface-muted); border:2rpx solid var(--color-border); border-radius:20rpx; padding:0 22rpx; color:var(--color-text); font-size:var(--font-size-normal); font-weight:700; }
+.onboarding-input, .onboarding-course { height:84rpx; line-height:84rpx; }
+.onboarding-course { color:var(--color-brand); }
+.onboarding-textarea { height:130rpx; padding:20rpx 22rpx; }
+.onboarding-error { margin-top:12rpx; color:var(--color-status-cancelled); font-size:var(--font-size-small); }
+button.onboarding-primary { width:100%; margin:28rpx 0 0; }
